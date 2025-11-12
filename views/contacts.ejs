@@ -1,0 +1,98 @@
+<%- include('partials/_head') %>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+  <%- include('partials/_navbar') %>
+  <%- include('partials/_sidebar') %>
+
+  <div class="content-wrapper">
+    <section class="content pt-3">
+      <div class="container-fluid">
+
+        <!-- Page header -->
+        <div class="row mb-2">
+          <div class="col-sm-6"><h1 class="m-0 text-dark">Contacts</h1></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+              <li class="breadcrumb-item active">Contacts</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Contacts table card -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title">All Contacts</h3>
+            <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#newModal">
+              <i class="fas fa-plus mr-1"></i> New
+            </button>
+          </div>
+          <div class="card-body table-responsive p-0">
+            <table class="table table-hover text-nowrap" id="tbl">
+              <thead>
+                <tr>
+                  <th style="width:28%">Name</th>
+                  <th style="width:26%">Email</th>
+                  <th style="width:18%">Phone</th>
+                  <th style="width:20%">Company</th>
+                  <th style="width:8%" class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <%- include('partials/_footer') %>
+</div>
+
+<!-- New Contact Modal -->
+<div class="modal fade" id="newModal" tabindex="-1" aria-labelledby="newModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="newModalLabel">New Contact</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+      <div class="modal-body">
+        <form id="fNew" autocomplete="off">
+          <div class="form-group">
+            <label>Name <span class="text-danger">*</span></label>
+            <input class="form-control" id="name" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Email</label>
+              <input type="email" class="form-control" id="email">
+            </div>
+            <div class="form-group col-md-6">
+              <label>Phone</label>
+              <input class="form-control" id="phone">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Company</label>
+            <input class="form-control" id="company">
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <input class="form-control" id="address">
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <textarea class="form-control" id="notes" rows="3"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page scripts -->
+<script src="/javascripts/contacts.js"></script>
+<%- include('partials/_scripts') %>

@@ -1,0 +1,27 @@
+<%- include('partials/_head') %>
+<body class="login-page">
+  <div class="login-box">
+    <div class="card card-outline card-primary">
+      <div class="card-header text-center"><b>Interior CRM</b></div>
+      <div class="card-body">
+        <p class="login-box-msg">Sign in to start your session</p>
+        <div id="err" class="alert alert-danger d-none"></div>
+        <form id="f">
+          <div class="input-group mb-3">
+            <input id="email" type="email" class="form-control" placeholder="Email" required />
+            <div class="input-group-append"><div class="input-group-text"><span class="fas fa-envelope"></span></div></div>
+          </div>
+          <div class="input-group mb-3">
+            <input id="password" type="password" class="form-control" placeholder="Password" required />
+            <div class="input-group-append"><div class="input-group-text"><span class="fas fa-lock"></span></div></div>
+          </div>
+          <div class="row">
+            <div class="col-8"></div>
+            <div class="col-4"><button class="btn btn-primary btn-block" type="submit">Sign In</button></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="/javascripts/login.js"></script>
+  <%- include('partials/_scripts') %>

@@ -1,0 +1,13 @@
+body {
+  padding: 0px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+/* public/stylesheets/style.css */
+.login-page { min-height: 100vh; }
+.gap-2 { gap: .5rem; } /* Bootstrap4-এ gap utility নেই */
+

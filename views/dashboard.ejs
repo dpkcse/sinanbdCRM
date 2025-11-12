@@ -1,0 +1,93 @@
+<%- include('partials/_head') %>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+  <%- include('partials/_navbar') %>
+  <%- include('partials/_sidebar', { active: 'dashboard' }) %>
+  
+
+  <div class="content-wrapper">
+    <section class="content pt-3">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6"><h1 class="m-0 text-dark">Dashboard</h1></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="row">
+          <div class="col-lg-4 col-12">
+            <div class="small-box bg-info">
+              <div class="inner">
+                <h3 id="mTotal">0</h3>
+                <p>Total Leads</p>
+              </div>
+              <div class="icon"><i class="fas fa-users"></i></div>
+              <a href="/leads" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-4 col-12">
+            <div class="small-box bg-success">
+              <div class="inner">
+                <h3 id="mToday">0</h3>
+                <p>New Today</p>
+              </div>
+              <div class="icon"><i class="fas fa-user-plus"></i></div>
+              <a href="/leads" class="small-box-footer">View <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-4 col-12">
+            <div class="small-box bg-warning">
+              <div class="inner">
+                <h3 id="mLast7">0</h3>
+                <p>New (Last 7 days)</p>
+              </div>
+              <div class="icon"><i class="fas fa-calendar-week"></i></div>
+              <a href="/leads" class="small-box-footer">View <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Leads by Status</h3></div>
+              <div class="card-body"><canvas id="chStatus" height="170"></canvas></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Last 14 days</h3></div>
+              <div class="card-body"><canvas id="chTrend" height="170"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent table -->
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Recent Leads</h3></div>
+          <div class="card-body table-responsive p-0">
+            <table class="table table-hover text-nowrap">
+              <thead>
+                <tr><th>Name</th><th>Mobile</th><th>Status</th><th>Created</th></tr>
+              </thead>
+              <tbody id="recentBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <%- include('partials/_footer') %>
+</div>
+
+<!-- Vendor: Chart.js -->
+<script src="/vendor/chart.js/dist/Chart.min.js"></script>
+<script src="/javascripts/dashboard.js" defer></script>
+<%- include('partials/_scripts') %>

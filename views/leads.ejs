@@ -1,0 +1,208 @@
+<%- include('partials/_head') %>
+<link rel="stylesheet" href="/vendor/select2/dist/css/select2.min.css" />
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+    <%- include('partials/_navbar') %>
+    <%- include('partials/_sidebar', { active: 'leads' }) %>    
+
+  <div class="content-wrapper">
+    <section class="content pt-3">
+      <div class="container-fluid">
+
+        <div class="row mb-2">
+          <div class="col-sm-6"><h1 class="m-0 text-dark">Leads</h1></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+              <li class="breadcrumb-item active">Leads</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <div class="d-flex gap-2">
+              <input id="q" class="form-control form-control-sm" placeholder="Search name/email/mobile/project/zone" />
+              <button id="btnSearch" class="btn btn-default btn-sm"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="d-flex gap-2">
+              <button id="btnTemplate" class="btn btn-outline-secondary btn-sm"><i class="fas fa-cloud-download-alt mr-1"></i>Get Template</button>
+              <button class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#bulkModal"><i class="fas fa-file-upload mr-1"></i>Bulk Upload</button>
+              <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#leadModal"><i class="fas fa-plus mr-1"></i> New Lead</button>
+            </div>
+          </div>
+          <div class="card-body table-responsive p-0">
+            <table class="table table-hover text-nowrap" id="tbl">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Mobile</th><th>Email</th><th>Project</th><th>Status</th><th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex justify-content-between align-items-center">
+            <small id="pageInfo"></small>
+            <div><button id="prev" class="btn btn-default btn-sm">Prev</button> <button id="next" class="btn btn-default btn-sm">Next</button></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <%- include('partials/_footer') %>
+</div>
+
+<!-- Add Lead Modal (5 ট্যাব + assignments) -->
+<div class="modal fade" id="leadModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Add New Prospect</h5><button type="button" class="close" data-dismiss="modal"><span>×</span></button></div>
+    <div class="modal-body">
+      <ul class="nav nav-pills mb-3" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-toggle="pill" href="#t-initial" role="tab">Initial Info</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-basic" role="tab">Basic Info</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-personal" role="tab">Personal Info</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-comm" role="tab">Communication</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-job" role="tab">Job/Service</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-infl" role="tab">Influencer</a></li>
+      </ul>
+
+      <form id="fLead" autocomplete="off">
+        <div class="tab-content">
+
+          <!-- Initial Info -->
+          <div class="tab-pane fade show active" id="t-initial" role="tabpanel">
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label>Prospect Type</label><br/>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                  <label class="btn btn-outline-primary btn-sm active"><input type="radio" name="prospect_type" value="Individual" checked> Individual</label>
+                  <label class="btn btn-outline-primary btn-sm"><input type="radio" name="prospect_type" value="Organization"> Organization</label>
+                </div>
+              </div>
+              <div class="form-group col-md-6">
+                <label>Assigned Users</label>
+                <select id="assigned_to" multiple class="form-control" style="width:100%"></select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>Prospect Name <span class="text-danger">*</span></label><input class="form-control" id="prospect_name" required></div>
+              <div class="form-group col-md-6"><label>Primary Contact No (Mobile) <span class="text-danger">*</span></label><input class="form-control" id="primary_mobile" required></div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>Primary Email</label><input type="email" class="form-control" id="primary_email"></div>
+              <div class="form-group col-md-6"><label>Project Name</label><input class="form-control" id="project_name"></div>
+            </div>
+
+            <div class="form-group form-check"><input type="checkbox" class="form-check-input" id="already_client"><label class="form-check-label" for="already_client">Already Client</label></div>
+          </div>
+
+          <!-- Basic Info -->
+          <div class="tab-pane fade" id="t-basic" role="tabpanel">
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>Prospect Priority</label>
+                <select id="priority" class="form-control"><option>Normal</option><option>High</option><option>Low</option></select></div>
+              <div class="form-group col-md-6"><label>Prospect Status</label>
+                <select id="status" class="form-control"><option>New</option><option>In Progress</option><option>Converted</option><option>Lost</option><option>On Hold</option></select></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>Interested Item / Service</label><input class="form-control" id="interested_item"></div>
+              <div class="form-group col-md-6"><label>Zone (Residence/Interested)</label><input class="form-control" id="zone"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>Campaign</label><input class="form-control" id="campaign"></div>
+              <div class="form-group col-md-6"><label>Information Source</label><input class="form-control" id="info_source"></div>
+            </div>
+            <div class="form-group"><label>Contacted By</label><input class="form-control" id="contacted_by"></div>
+            <div class="form-group"><label>Important Note</label><input class="form-control" id="important_note"></div>
+          </div>
+
+          <!-- Personal Info -->
+          <div class="tab-pane fade" id="t-personal" role="tabpanel">
+            <div class="form-row">
+              <div class="form-group col-md-4"><label>Date of Birth</label><input type="date" class="form-control" id="dob"></div>
+              <div class="form-group col-md-4"><label>Gender</label>
+                <select id="gender" class="form-control"><option></option><option>Male</option><option>Female</option><option>Other</option></select></div>
+              <div class="form-group col-md-4"><label>NID</label><input class="form-control" id="nid"></div>
+            </div>
+            <div class="form-group"><label>Address Line 1</label><input class="form-control" id="address_line1"></div>
+            <div class="form-group"><label>Address Line 2</label><input class="form-control" id="address_line2"></div>
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>City</label><input class="form-control" id="city"></div>
+              <div class="form-group col-md-6"><label>Postal Code</label><input class="form-control" id="postal_code"></div>
+            </div>
+          </div>
+
+          <!-- Communication Info -->
+          <div class="tab-pane fade" id="t-comm" role="tabpanel">
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>Preferred Channel</label>
+                <select id="preferred_channel" class="form-control">
+                  <option></option><option>Phone</option><option>WhatsApp</option><option>Email</option><option>Facebook</option><option>SMS</option><option>In-person</option>
+                </select></div>
+              <div class="form-group col-md-6"><label>Last Contact At</label><input type="datetime-local" class="form-control" id="last_contact_at"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>WhatsApp</label><input class="form-control" id="whatsapp"></div>
+              <div class="form-group col-md-6"><label>Facebook</label><input class="form-control" id="facebook"></div>
+            </div>
+            <div class="form-group"><label>Comm Notes</label><textarea class="form-control" id="comm_notes" rows="2"></textarea></div>
+          </div>
+
+          <!-- Job/Service Info -->
+          <div class="tab-pane fade" id="t-job" role="tabpanel">
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>Profession</label><input class="form-control" id="profession"></div>
+              <div class="form-group col-md-6"><label>Organization</label><input class="form-control" id="organization"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-6"><label>Designation</label><input class="form-control" id="designation"></div>
+              <div class="form-group col-md-6"><label>Income</label><input type="number" step="0.01" class="form-control" id="income"></div>
+            </div>
+          </div>
+
+          <!-- Influencer Info -->
+          <div class="tab-pane fade" id="t-infl" role="tabpanel">
+            <div class="form-group form-check">
+              <input type="checkbox" class="form-check-input" id="is_influenced">
+              <label class="form-check-label" for="is_influenced">Has Influencer</label>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-4"><label>Influencer Name</label><input class="form-control" id="influencer_name"></div>
+              <div class="form-group col-md-4"><label>Contact</label><input class="form-control" id="influencer_contact"></div>
+              <div class="form-group col-md-4"><label>Relation</label><input class="form-control" id="relation"></div>
+            </div>
+            <div class="form-group"><label>Influencer Notes</label><textarea class="form-control" id="infl_notes" rows="2"></textarea></div>
+          </div>
+
+        </div>
+
+        <div class="mt-3 d-flex justify-content-end">
+          <button class="btn btn-primary" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div></div>
+</div>
+
+<!-- Bulk upload modal -->
+<div class="modal fade" id="bulkModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Bulk Upload Leads (CSV)</h5><button type="button" class="close" data-dismiss="modal"><span>×</span></button></div>
+  <div class="modal-body">
+    <form id="fBulk">
+      <div class="form-group">
+        <label>Select CSV file</label>
+        <input type="file" class="form-control-file" id="bulkFile" accept=".csv" required>
+      </div>
+      <button class="btn btn-primary" type="submit">Upload</button>
+    </form>
+    <div id="bulkResult" class="mt-3"></div>
+  </div>
+</div></div></div>
+
+<script src="/vendor/select2/dist/js/select2.full.min.js"></script>
+<script src="/javascripts/leads.js" defer></script>
+<%- include('partials/_scripts') %>
