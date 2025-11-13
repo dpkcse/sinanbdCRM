@@ -2,58 +2,108 @@
 <link rel="stylesheet" href="/vendor/select2/dist/css/select2.min.css" />
 
 <style>
+  /* ---------- Top toolbar ---------- */
   .top-toolbar {
     background: #f5f7ff;
-    border-radius: 12px;
-    padding: 16px 20px;
-    display: flex;
-    flex-wrap: wrap;
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1.5fr) auto;
+    grid-gap: 12px;
     align-items: center;
-    gap: 12px;
   }
-  .top-toolbar .left-group,
-  .top-toolbar .right-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+  .top-toolbar .btn {
+    border-radius: 24px;
+    font-weight: 600;
+    padding-inline: 20px;
   }
-  .funnel-wrapper {
+  .top-toolbar .btn-success {
+    background: #06b34b;
+    border-color: #06b34b;
+  }
+  .top-toolbar .btn-primary {
+    background: #007bff;
+    border-color: #007bff;
+  }
+  .top-toolbar .search-wrap .form-control {
+    border-radius: 24px 0 0 24px;
+  }
+  .top-toolbar .search-wrap .btn {
+    border-radius: 0 24px 24px 0;
+  }
+  .btn-adv-search {
+    border-radius: 24px;
+    font-weight: 600;
+  }
+
+  /* ---------- Funnel / pipeline ---------- */
+  .funnel-card {
     background: #f5f7ff;
     border-radius: 18px;
-    padding: 16px 24px;
+  }
+  .pipeline {
+    position: relative;
+    padding: 20px 24px 10px 24px;
     overflow-x: auto;
   }
-  .funnel-bar {
-    display: flex;
-    align-items: center;
-    gap: 32px;
+  .pipeline-inner {
+    position: relative;
     min-width: max-content;
+  }
+  .pipeline-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 35px;
+    height: 2px;
+    background: #d0d8ff;
+    z-index: 1;
+  }
+  .funnel-bar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
   }
   .funnel-stage {
     text-align: center;
     flex: 0 0 auto;
   }
   .funnel-count {
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     background: #ffffff;
-    border: 2px solid #3c8dbc;
+    border: 3px solid #3c8dbc;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    margin: 0 auto 4px;
+    font-weight: 700;
     font-size: 14px;
+    margin: 0 auto 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  }
+  .funnel-stage.total .funnel-count {
+    border-color: #28a745;
   }
   .funnel-label {
     font-size: 11px;
-    color: #555;
+    color: #444;
     white-space: nowrap;
   }
+
+  /* ---------- Table ---------- */
   .table-prospect {
     font-size: 13px;
+  }
+  .table-prospect thead th {
+    background: #4f7cf7;
+    color: #fff;
+    border-bottom: none;
+  }
+  .table-prospect tbody tr:nth-child(even) {
+    background: #fafbff;
   }
   .table-prospect td,
   .table-prospect th {
@@ -61,6 +111,7 @@
   }
   .prospect-id {
     font-weight: 700;
+    font-size: 13px;
   }
   .prospect-meta {
     font-size: 11px;
@@ -79,7 +130,7 @@
     justify-content: center;
     border-radius: 14px;
     padding: 2px 8px;
-    background: #e3ecff;
+    background: #e2ebff;
     margin-right: 4px;
     margin-bottom: 4px;
     font-size: 11px;
@@ -92,7 +143,7 @@
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
   <%- include('partials/_navbar') %>
-  <%- include('partials/_sidebar', { active: 'leads' }) %>    
+  <%- include('partials/_sidebar', { active: 'leads' }) %>
 
   <div class="content-wrapper">
     <section class="content pt-3">
@@ -112,13 +163,17 @@
         <!-- Toolbar -->
         <div class="card mb-3">
           <div class="card-body top-toolbar">
-            <div class="left-group">
+
+            <div class="btn-group">
               <button class="btn btn-success" data-toggle="modal" data-target="#leadModal">
                 <i class="fas fa-plus mr-1"></i> Add New
               </button>
               <button id="btnRefresh" class="btn btn-primary">
                 <i class="fas fa-sync-alt mr-1"></i> Refresh
               </button>
+            </div>
+
+            <div class="search-wrap">
               <div class="input-group">
                 <input id="q"
                        class="form-control"
@@ -132,8 +187,8 @@
               </div>
             </div>
 
-            <div class="right-group ml-auto">
-              <button class="btn btn-outline-primary">
+            <div class="text-right">
+              <button class="btn btn-outline-primary btn-adv-search" type="button">
                 <i class="fas fa-sliders-h mr-1"></i> Advance Search
               </button>
             </div>
@@ -141,11 +196,13 @@
         </div>
 
         <!-- Funnel / status bar -->
-        <div class="card mb-3">
-          <div class="card-body funnel-wrapper">
-            <div id="statusPipeline" class="funnel-bar">
-              <!-- JS দিয়ে byStatus থেকে ভরা হবে -->
-              <div class="text-muted">Loading status summary...</div>
+        <div class="card mb-3 funnel-card">
+          <div class="pipeline">
+            <div class="pipeline-inner">
+              <div class="pipeline-line"></div>
+              <div id="statusPipeline" class="funnel-bar">
+                <div class="text-muted">Loading status summary...</div>
+              </div>
             </div>
           </div>
         </div>
@@ -156,7 +213,7 @@
             <div>
               Show
               <select id="pageSize" class="custom-select custom-select-sm" style="width:auto; display:inline-block;">
-                <option value="10">10</option>
+                <option value="10" selected>10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
@@ -165,7 +222,6 @@
             </div>
 
             <div>
-              <!-- আগের Template + Bulk Upload বাটনগুলো এখানেই রাখলাম -->
               <button id="btnTemplate" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-cloud-download-alt mr-1"></i> Template
               </button>
@@ -177,7 +233,7 @@
 
           <div class="card-body table-responsive p-0">
             <table class="table table-hover text-nowrap table-prospect" id="tbl">
-              <thead class="bg-light">
+              <thead>
                 <tr>
                   <th style="width:160px;">Prospect ID</th>
                   <th style="width:260px;">Prospect Details</th>
@@ -190,7 +246,7 @@
                 </tr>
               </thead>
               <tbody>
-                <!-- JS দিয়ে রো আসবে -->
+                <!-- JS দিয়ে ভরবে -->
               </tbody>
             </table>
           </div>
@@ -211,7 +267,7 @@
   <%- include('partials/_footer') %>
 </div>
 
-<!-- Add Lead Modal (Initial Info + Basic Info) -->
+<!-- Add / Edit Prospect Modal -->
 <div class="modal fade" id="leadModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -235,6 +291,20 @@
 
             <!-- Initial Info -->
             <div class="tab-pane fade show active" id="t-initial" role="tabpanel">
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Prospect Type</label><br/>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="prospect_type" id="pt_individual" value="Individual" checked>
+                    <label class="form-check-label" for="pt_individual">Individual</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="prospect_type" id="pt_organization" value="Organization">
+                    <label class="form-check-label" for="pt_organization">Organization</label>
+                  </div>
+                </div>
+              </div>
+
               <div class="form-row">
                 <div class="form-group col-md-6">
                   <label>Prospect Name <span class="text-danger">*</span></label>
@@ -281,9 +351,6 @@
                 <div class="form-group col-md-6">
                   <label>Additional Assign User(s)</label>
                   <select id="additional_assign_user" class="form-control" multiple style="width:100%"></select>
-                  <small class="form-text text-muted">
-                    Optional – select one or more extra users.
-                  </small>
                 </div>
               </div>
             </div>
