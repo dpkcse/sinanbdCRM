@@ -1,16 +1,106 @@
 <%- include('partials/_head') %>
 <link rel="stylesheet" href="/vendor/select2/dist/css/select2.min.css" />
+
+<style>
+  .top-toolbar {
+    background: #f5f7ff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .top-toolbar .left-group,
+  .top-toolbar .right-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .funnel-wrapper {
+    background: #f5f7ff;
+    border-radius: 18px;
+    padding: 16px 24px;
+    overflow-x: auto;
+  }
+  .funnel-bar {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    min-width: max-content;
+  }
+  .funnel-stage {
+    text-align: center;
+    flex: 0 0 auto;
+  }
+  .funnel-count {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #3c8dbc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin: 0 auto 4px;
+    font-size: 14px;
+  }
+  .funnel-label {
+    font-size: 11px;
+    color: #555;
+    white-space: nowrap;
+  }
+  .table-prospect {
+    font-size: 13px;
+  }
+  .table-prospect td,
+  .table-prospect th {
+    vertical-align: middle !important;
+  }
+  .prospect-id {
+    font-weight: 700;
+  }
+  .prospect-meta {
+    font-size: 11px;
+    color: #777;
+  }
+  .prospect-name {
+    font-weight: 600;
+  }
+  .prospect-location {
+    font-size: 11px;
+    color: #777;
+  }
+  .followup-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    padding: 2px 8px;
+    background: #e3ecff;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+  .followup-pill i {
+    margin-right: 3px;
+  }
+</style>
+
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
-    <%- include('partials/_navbar') %>
-    <%- include('partials/_sidebar', { active: 'leads' }) %>    
+  <%- include('partials/_navbar') %>
+  <%- include('partials/_sidebar', { active: 'leads' }) %>    
 
   <div class="content-wrapper">
     <section class="content pt-3">
       <div class="container-fluid">
 
+        <!-- Header -->
         <div class="row mb-2">
-          <div class="col-sm-6"><h1 class="m-0 text-dark">Leads</h1></div>
+          <div class="col-sm-6"><h1 class="m-0 text-dark">Prospect</h1></div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
@@ -19,31 +109,98 @@
           </div>
         </div>
 
+        <!-- Toolbar -->
+        <div class="card mb-3">
+          <div class="card-body top-toolbar">
+            <div class="left-group">
+              <button class="btn btn-success" data-toggle="modal" data-target="#leadModal">
+                <i class="fas fa-plus mr-1"></i> Add New
+              </button>
+              <button id="btnRefresh" class="btn btn-primary">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh
+              </button>
+              <div class="input-group">
+                <input id="q"
+                       class="form-control"
+                       placeholder="Search all prospects"
+                       autocomplete="off" />
+                <div class="input-group-append">
+                  <button id="btnSearch" class="btn btn-outline-secondary">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="right-group ml-auto">
+              <button class="btn btn-outline-primary">
+                <i class="fas fa-sliders-h mr-1"></i> Advance Search
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funnel / status bar -->
+        <div class="card mb-3">
+          <div class="card-body funnel-wrapper">
+            <div id="statusPipeline" class="funnel-bar">
+              <!-- JS দিয়ে byStatus থেকে ভরা হবে -->
+              <div class="text-muted">Loading status summary...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main table -->
         <div class="card">
           <div class="card-header d-flex align-items-center justify-content-between">
-            <div class="d-flex gap-2">
-              <input id="q" class="form-control form-control-sm" placeholder="Search name/email/mobile/project/zone" />
-              <button id="btnSearch" class="btn btn-default btn-sm"><i class="fas fa-search"></i></button>
+            <div>
+              Show
+              <select id="pageSize" class="custom-select custom-select-sm" style="width:auto; display:inline-block;">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              entries
             </div>
-            <div class="d-flex gap-2">
-              <button id="btnTemplate" class="btn btn-outline-secondary btn-sm"><i class="fas fa-cloud-download-alt mr-1"></i>Get Template</button>
-              <button class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#bulkModal"><i class="fas fa-file-upload mr-1"></i>Bulk Upload</button>
-              <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#leadModal"><i class="fas fa-plus mr-1"></i> New Lead</button>
+
+            <div>
+              <!-- আগের Template + Bulk Upload বাটনগুলো এখানেই রাখলাম -->
+              <button id="btnTemplate" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-cloud-download-alt mr-1"></i> Template
+              </button>
+              <button class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#bulkModal">
+                <i class="fas fa-file-upload mr-1"></i> Bulk Upload
+              </button>
             </div>
           </div>
+
           <div class="card-body table-responsive p-0">
-            <table class="table table-hover text-nowrap" id="tbl">
-              <thead>
+            <table class="table table-hover text-nowrap table-prospect" id="tbl">
+              <thead class="bg-light">
                 <tr>
-                  <th>Name</th><th>Mobile</th><th>Email</th><th>Project</th><th>Status</th><th class="text-right">Actions</th>
+                  <th style="width:160px;">Prospect ID</th>
+                  <th style="width:260px;">Prospect Details</th>
+                  <th style="width:130px;">Primary Contact</th>
+                  <th style="width:200px;">Followup Activity</th>
+                  <th style="width:150px;">Stage</th>
+                  <th style="width:150px;">Assigns &amp; Creator</th>
+                  <th style="width:220px;">Last &amp; Next Activity</th>
+                  <th class="text-right" style="width:60px;">Action</th>
                 </tr>
               </thead>
-              <tbody></tbody>
+              <tbody>
+                <!-- JS দিয়ে রো আসবে -->
+              </tbody>
             </table>
           </div>
+
           <div class="card-footer d-flex justify-content-between align-items-center">
             <small id="pageInfo"></small>
-            <div><button id="prev" class="btn btn-default btn-sm">Prev</button> <button id="next" class="btn btn-default btn-sm">Next</button></div>
+            <div>
+              <button id="prev" class="btn btn-default btn-sm">Prev</button>
+              <button id="next" class="btn btn-default btn-sm">Next</button>
+            </div>
           </div>
         </div>
 
@@ -54,155 +211,165 @@
   <%- include('partials/_footer') %>
 </div>
 
-<!-- Add Lead Modal (5 ট্যাব + assignments) -->
+<!-- Add Lead Modal (Initial Info + Basic Info) -->
 <div class="modal fade" id="leadModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title">Add New Prospect</h5><button type="button" class="close" data-dismiss="modal"><span>×</span></button></div>
-    <div class="modal-body">
-      <ul class="nav nav-pills mb-3" role="tablist">
-        <li class="nav-item"><a class="nav-link active" data-toggle="pill" href="#t-initial" role="tab">Initial Info</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-basic" role="tab">Basic Info</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-personal" role="tab">Personal Info</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-comm" role="tab">Communication</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-job" role="tab">Job/Service</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#t-infl" role="tab">Influencer</a></li>
-      </ul>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Prospect</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>×</span></button>
+      </div>
 
-      <form id="fLead" autocomplete="off">
-        <div class="tab-content">
+      <div class="modal-body">
+        <ul class="nav nav-pills mb-3" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" data-toggle="pill" href="#t-initial" role="tab">Initial Info</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="pill" href="#t-basic" role="tab">Basic Info</a>
+          </li>
+        </ul>
 
-          <!-- Initial Info -->
-          <div class="tab-pane fade show active" id="t-initial" role="tabpanel">
-            <div class="form-row">
-              <div class="form-group col-md-6">
-                <label>Prospect Type</label><br/>
-                <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                  <label class="btn btn-outline-primary btn-sm active"><input type="radio" name="prospect_type" value="Individual" checked> Individual</label>
-                  <label class="btn btn-outline-primary btn-sm"><input type="radio" name="prospect_type" value="Organization"> Organization</label>
+        <form id="fLead" autocomplete="off">
+          <div class="tab-content">
+
+            <!-- Initial Info -->
+            <div class="tab-pane fade show active" id="t-initial" role="tabpanel">
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Prospect Name <span class="text-danger">*</span></label>
+                  <input class="form-control" id="prospect_name" required>
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Primary Contact (Mobile) <span class="text-danger">*</span></label>
+                  <input class="form-control" id="primary_mobile" required>
                 </div>
               </div>
-              <div class="form-group col-md-6">
-                <label>Assigned Users</label>
-                <select id="assigned_to" multiple class="form-control" style="width:100%"></select>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Alternative Contact</label>
+                  <input class="form-control" id="alternative_mobile">
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Primary Email</label>
+                  <input type="email" class="form-control" id="primary_email">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Project Type</label>
+                  <input class="form-control" id="project_type">
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Project Size</label>
+                  <input class="form-control" id="project_size">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Project Details</label>
+                <textarea class="form-control" id="project_details" rows="2"></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Assign User</label>
+                  <select id="assign_user" class="form-control" style="width:100%"></select>
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Additional Assign User(s)</label>
+                  <select id="additional_assign_user" class="form-control" multiple style="width:100%"></select>
+                  <small class="form-text text-muted">
+                    Optional – select one or more extra users.
+                  </small>
+                </div>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>Prospect Name <span class="text-danger">*</span></label><input class="form-control" id="prospect_name" required></div>
-              <div class="form-group col-md-6"><label>Primary Contact No (Mobile) <span class="text-danger">*</span></label><input class="form-control" id="primary_mobile" required></div>
+            <!-- Basic Info -->
+            <div class="tab-pane fade" id="t-basic" role="tabpanel">
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Prospect Priority</label>
+                  <select id="priority" class="form-control">
+                    <option value="Normal">Normal</option>
+                    <option value="High">High</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>District</label>
+                  <input class="form-control" id="district">
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Thana</label>
+                  <input class="form-control" id="thana">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Area</label>
+                  <input class="form-control" id="area">
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Street Details</label>
+                  <input class="form-control" id="street_details">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Campaign Name</label>
+                  <input class="form-control" id="campaign">
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Information Source</label>
+                  <input class="form-control" id="info_source">
+                </div>
+              </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>Primary Email</label><input type="email" class="form-control" id="primary_email"></div>
-              <div class="form-group col-md-6"><label>Project Name</label><input class="form-control" id="project_name"></div>
-            </div>
-
-            <div class="form-group form-check"><input type="checkbox" class="form-check-input" id="already_client"><label class="form-check-label" for="already_client">Already Client</label></div>
           </div>
 
-          <!-- Basic Info -->
-          <div class="tab-pane fade" id="t-basic" role="tabpanel">
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>Prospect Priority</label>
-                <select id="priority" class="form-control"><option>Normal</option><option>High</option><option>Low</option></select></div>
-              <div class="form-group col-md-6"><label>Prospect Status</label>
-                <select id="status" class="form-control"><option>New</option><option>In Progress</option><option>Converted</option><option>Lost</option><option>On Hold</option></select></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>Interested Item / Service</label><input class="form-control" id="interested_item"></div>
-              <div class="form-group col-md-6"><label>Zone (Residence/Interested)</label><input class="form-control" id="zone"></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>Campaign</label><input class="form-control" id="campaign"></div>
-              <div class="form-group col-md-6"><label>Information Source</label><input class="form-control" id="info_source"></div>
-            </div>
-            <div class="form-group"><label>Contacted By</label><input class="form-control" id="contacted_by"></div>
-            <div class="form-group"><label>Important Note</label><input class="form-control" id="important_note"></div>
+          <div class="mt-3 d-flex justify-content-end">
+            <button class="btn btn-primary" type="submit">Save</button>
           </div>
+        </form>
+      </div>
 
-          <!-- Personal Info -->
-          <div class="tab-pane fade" id="t-personal" role="tabpanel">
-            <div class="form-row">
-              <div class="form-group col-md-4"><label>Date of Birth</label><input type="date" class="form-control" id="dob"></div>
-              <div class="form-group col-md-4"><label>Gender</label>
-                <select id="gender" class="form-control"><option></option><option>Male</option><option>Female</option><option>Other</option></select></div>
-              <div class="form-group col-md-4"><label>NID</label><input class="form-control" id="nid"></div>
-            </div>
-            <div class="form-group"><label>Address Line 1</label><input class="form-control" id="address_line1"></div>
-            <div class="form-group"><label>Address Line 2</label><input class="form-control" id="address_line2"></div>
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>City</label><input class="form-control" id="city"></div>
-              <div class="form-group col-md-6"><label>Postal Code</label><input class="form-control" id="postal_code"></div>
-            </div>
-          </div>
-
-          <!-- Communication Info -->
-          <div class="tab-pane fade" id="t-comm" role="tabpanel">
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>Preferred Channel</label>
-                <select id="preferred_channel" class="form-control">
-                  <option></option><option>Phone</option><option>WhatsApp</option><option>Email</option><option>Facebook</option><option>SMS</option><option>In-person</option>
-                </select></div>
-              <div class="form-group col-md-6"><label>Last Contact At</label><input type="datetime-local" class="form-control" id="last_contact_at"></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>WhatsApp</label><input class="form-control" id="whatsapp"></div>
-              <div class="form-group col-md-6"><label>Facebook</label><input class="form-control" id="facebook"></div>
-            </div>
-            <div class="form-group"><label>Comm Notes</label><textarea class="form-control" id="comm_notes" rows="2"></textarea></div>
-          </div>
-
-          <!-- Job/Service Info -->
-          <div class="tab-pane fade" id="t-job" role="tabpanel">
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>Profession</label><input class="form-control" id="profession"></div>
-              <div class="form-group col-md-6"><label>Organization</label><input class="form-control" id="organization"></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group col-md-6"><label>Designation</label><input class="form-control" id="designation"></div>
-              <div class="form-group col-md-6"><label>Income</label><input type="number" step="0.01" class="form-control" id="income"></div>
-            </div>
-          </div>
-
-          <!-- Influencer Info -->
-          <div class="tab-pane fade" id="t-infl" role="tabpanel">
-            <div class="form-group form-check">
-              <input type="checkbox" class="form-check-input" id="is_influenced">
-              <label class="form-check-label" for="is_influenced">Has Influencer</label>
-            </div>
-            <div class="form-row">
-              <div class="form-group col-md-4"><label>Influencer Name</label><input class="form-control" id="influencer_name"></div>
-              <div class="form-group col-md-4"><label>Contact</label><input class="form-control" id="influencer_contact"></div>
-              <div class="form-group col-md-4"><label>Relation</label><input class="form-control" id="relation"></div>
-            </div>
-            <div class="form-group"><label>Influencer Notes</label><textarea class="form-control" id="infl_notes" rows="2"></textarea></div>
-          </div>
-
-        </div>
-
-        <div class="mt-3 d-flex justify-content-end">
-          <button class="btn btn-primary" type="submit">Save</button>
-        </div>
-      </form>
     </div>
-  </div></div>
+  </div>
 </div>
 
 <!-- Bulk upload modal -->
-<div class="modal fade" id="bulkModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
-  <div class="modal-header"><h5 class="modal-title">Bulk Upload Leads (CSV)</h5><button type="button" class="close" data-dismiss="modal"><span>×</span></button></div>
-  <div class="modal-body">
-    <form id="fBulk">
-      <div class="form-group">
-        <label>Select CSV file</label>
-        <input type="file" class="form-control-file" id="bulkFile" accept=".csv" required>
+<div class="modal fade" id="bulkModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bulk Upload Leads (CSV)</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>×</span></button>
       </div>
-      <button class="btn btn-primary" type="submit">Upload</button>
-    </form>
-    <div id="bulkResult" class="mt-3"></div>
+      <div class="modal-body">
+        <form id="fBulk">
+          <div class="form-group">
+            <label>Select CSV file</label>
+            <input type="file" class="form-control-file" id="bulkFile" accept=".csv" required>
+          </div>
+          <button class="btn btn-primary" type="submit">Upload</button>
+        </form>
+        <div id="bulkResult" class="mt-3"></div>
+      </div>
+    </div>
   </div>
-</div></div></div>
+</div>
 
 <script src="/vendor/select2/dist/js/select2.full.min.js"></script>
 <script src="/javascripts/leads.js" defer></script>
 <%- include('partials/_scripts') %>
+</body>
