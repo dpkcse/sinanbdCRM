@@ -1,161 +1,461 @@
+// public/javascripts/leads.js
+
+// ---------- API helper (access token + refresh) ---------- //
 const API = {
-    async req(path, opts = {}) {
-      const t = localStorage.getItem('accessToken');
-      opts.headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {}, t ? { Authorization: 'Bearer ' + t } : {});
-      opts.credentials = 'include';
-      const r = await fetch(path, opts);
-      if (r.status === 401 && !opts.__retry) {
-        const rr = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
-        if (rr.ok) { const { accessToken } = await rr.json(); localStorage.setItem('accessToken', accessToken); opts.__retry = true; return API.req(path, opts); }
-        location.href='/login'; return;
+  async request(path, opts = {}) {
+    const token =
+      localStorage.getItem('accessToken') ||
+      sessionStorage.getItem('accessToken') ||
+      '';
+
+    opts.headers = Object.assign(
+      { 'Content-Type': 'application/json' },
+      opts.headers || {},
+      token ? { Authorization: 'Bearer ' + token } : {}
+    );
+
+    opts.credentials = 'include';
+
+    const res = await fetch(path, opts);
+
+    // token expire হলে refresh-এর চেষ্টা
+    if (res.status === 401 && !opts.__retry) {
+      const rr = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (rr.ok) {
+        const data = await rr.json();
+        if (data.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+        }
+        opts.__retry = true;
+        return API.request(path, opts);
       }
-      return r;
+      location.href = '/login';
+      return res;
     }
+
+    return res;
+  },
+};
+
+const state = {
+  q: '',
+  page: 1,
+  pageSize: 10,
+  total: 0,
+};
+
+// ---------- ছোট helper ---------- //
+function formatProspectId(id) {
+  if (!id) return '';
+  return 'PR' + String(id).padStart(5, '0');
+}
+
+function formatDateTime(str) {
+  if (!str) return '';
+  const d = new Date(str);
+  if (Number.isNaN(d.getTime())) return '';
+  const date = d.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+  const time = d.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${date} ${time}`;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ---------- টেবিল রো জেনারেট ---------- //
+function rowHtml(lead) {
+  const created = formatDateTime(lead.created_at);
+  const prospectId = formatProspectId(lead.id);
+  const status = lead.status || 'New';
+  const priority = lead.priority || 'Normal';
+  const district = lead.district || lead.area || '';
+  const ownerName = lead.created_by_name || '';
+  const stageBadgeClass =
+    status === 'Already Client'
+      ? 'badge-success'
+      : status === 'Junk Prospect'
+      ? 'badge-danger'
+      : 'badge-info';
+
+  return `
+    <tr data-id="${lead.id}">
+      <td>
+        <div class="prospect-id">${prospectId}</div>
+        <div class="prospect-meta">${escapeHtml(created)}</div>
+      </td>
+      <td>
+        <div class="prospect-name">${escapeHtml(lead.prospect_name || '')}</div>
+        <div class="prospect-location">
+          ${district ? '(' + escapeHtml(district) + ')' : ''}
+        </div>
+        ${
+          lead.project_type
+            ? `<div class="prospect-meta">Project: ${escapeHtml(
+                lead.project_type
+              )}</div>`
+            : ''
+        }
+      </td>
+      <td>
+        <div>${escapeHtml(lead.primary_mobile || '')}</div>
+        ${
+          lead.primary_email
+            ? `<div class="prospect-meta">${escapeHtml(
+                lead.primary_email
+              )}</div>`
+            : ''
+        }
+      </td>
+      <td>
+        <span class="followup-pill">
+          <i class="fas fa-phone"></i> 0
+        </span>
+        <span class="followup-pill">
+          <i class="fas fa-envelope"></i> 0
+        </span>
+        <span class="followup-pill">
+          <i class="fas fa-shopping-cart"></i> 0
+        </span>
+        <span class="followup-pill">
+          <i class="fas fa-map-marker-alt"></i> 0
+        </span>
+      </td>
+      <td>
+        <span class="badge ${stageBadgeClass}">${escapeHtml(status)}</span>
+        <div class="prospect-meta">Priority: ${escapeHtml(priority)}</div>
+      </td>
+      <td>
+        ${
+          ownerName
+            ? `<div class="prospect-meta">${escapeHtml(ownerName)}</div>`
+            : ''
+        }
+        ${
+          lead.owner_id
+            ? `<div class="prospect-meta">Owner ID: ${lead.owner_id}</div>`
+            : ''
+        }
+      </td>
+      <td>
+        <div class="prospect-meta">No Followup</div>
+        <div class="prospect-meta">No Next Followup</div>
+      </td>
+      <td class="text-right">
+        <button class="btn btn-xs btn-danger del">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    </tr>
+  `;
+}
+
+// ---------- লিস্ট লোড ---------- //
+async function loadLeads() {
+  const params = new URLSearchParams({
+    q: state.q,
+    page: state.page,
+    pageSize: state.pageSize,
+  });
+
+  const res = await API.request('/api/leads?' + params.toString());
+  const json = await res.json();
+
+  const list = json.data || [];
+  state.total = json.total || 0;
+  state.page = json.page || 1;
+  state.pageSize = json.pageSize || state.pageSize;
+
+  const tbody = document.querySelector('#tbl tbody');
+  tbody.innerHTML = list.map(rowHtml).join('') || `
+    <tr><td colspan="8" class="text-center text-muted">No prospects found</td></tr>
+  `;
+
+  const start = state.total ? (state.page - 1) * state.pageSize + 1 : 0;
+  const end = Math.min(state.total, state.page * state.pageSize);
+  document.getElementById('pageInfo').textContent = state.total
+    ? `Showing ${start}-${end} of ${state.total}`
+    : 'No results';
+
+  document.getElementById('prev').disabled = state.page <= 1;
+  document.getElementById('next').disabled =
+    state.page * state.pageSize >= state.total;
+}
+
+// ---------- status funnel লোড ---------- //
+const STAGE_ORDER = [
+  'New prospect',
+  'Initial Contact',
+  'Low Potential',
+  'On Followup',
+  'Visit Scheduled',
+  'Visit Done',
+  'Lead Created',
+  'Already Client',
+  'Junk Prospect',
+];
+
+async function loadStats() {
+  const el = document.getElementById('statusPipeline');
+  if (!el) return;
+
+  try {
+    const res = await API.request('/api/leads/stats');
+    const json = await res.json();
+    const byStatus = json.byStatus || [];
+
+    if (!byStatus.length) {
+      el.innerHTML = `<div class="text-muted">No data yet</div>`;
+      return;
+    }
+
+    const map = {};
+    let total = 0;
+    byStatus.forEach((s) => {
+      map[s.k] = s.v;
+      total += s.v;
+    });
+
+    const stages = [];
+
+    STAGE_ORDER.forEach((name) => {
+      if (map[name]) {
+        stages.push({ k: name, v: map[name] });
+        delete map[name];
+      }
+    });
+
+    // বাকি অচেনা স্টেজ থাকলে শেষে
+    Object.keys(map).forEach((k) => stages.push({ k, v: map[k] }));
+
+    const html =
+      stages
+        .map(
+          (s) => `
+        <div class="funnel-stage">
+          <div class="funnel-count">${s.v}</div>
+          <div class="funnel-label">${escapeHtml(s.k)}</div>
+        </div>`
+        )
+        .join('') +
+      `
+        <div class="funnel-stage total">
+          <div class="funnel-count">${total}</div>
+          <div class="funnel-label">Total</div>
+        </div>
+      `;
+
+    el.innerHTML = html;
+  } catch (err) {
+    console.error(err);
+    el.innerHTML = `<div class="text-danger">Failed to load summary</div>`;
+  }
+}
+
+// ---------- Assign user select2 ---------- //
+async function loadUsers() {
+  const res = await API.request('/api/users/options');
+  const json = await res.json();
+  const data = json.data || [];
+
+  const $assign = $('#assign_user');
+  const $additional = $('#additional_assign_user');
+
+  $assign.empty();
+  $additional.empty();
+
+  data.forEach((u) => {
+    const opt = new Option(u.name, u.id, false, false);
+    $assign.append(opt.cloneNode(true));
+    $additional.append(opt.cloneNode(true));
+  });
+
+  $assign.select2({ width: 'resolve', placeholder: 'Select owner' });
+  $additional.select2({
+    width: 'resolve',
+    placeholder: 'Select additional users',
+  });
+}
+
+// ---------- Search / pagination events ---------- //
+document.getElementById('btnSearch').addEventListener('click', () => {
+  state.q = document.getElementById('q').value.trim();
+  state.page = 1;
+  loadLeads();
+  loadStats();
+});
+
+document.getElementById('q').addEventListener('keyup', (e) => {
+  if (e.key === 'Enter') {
+    state.q = e.target.value.trim();
+    state.page = 1;
+    loadLeads();
+    loadStats();
+  }
+});
+
+document.getElementById('btnRefresh').addEventListener('click', () => {
+  loadLeads();
+  loadStats();
+});
+
+document.getElementById('prev').addEventListener('click', () => {
+  if (state.page > 1) {
+    state.page--;
+    loadLeads();
+  }
+});
+
+document.getElementById('next').addEventListener('click', () => {
+  if (state.page * state.pageSize < state.total) {
+    state.page++;
+    loadLeads();
+  }
+});
+
+document.getElementById('pageSize').addEventListener('change', (e) => {
+  state.pageSize = parseInt(e.target.value, 10) || 10;
+  state.page = 1;
+  loadLeads();
+});
+
+// ---------- Add lead submit ---------- //
+document.getElementById('fLead').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const prospectType =
+    document.querySelector('input[name="prospect_type"]:checked')?.value ||
+    'Individual';
+
+  const body = {
+    prospect_type: prospectType,
+    prospect_name: document.getElementById('prospect_name').value.trim(),
+    primary_mobile: document.getElementById('primary_mobile').value.trim(),
+    alternative_mobile:
+      document.getElementById('alternative_mobile').value.trim() || null,
+    primary_email:
+      document.getElementById('primary_email').value.trim() || null,
+    project_type: document.getElementById('project_type').value.trim() || null,
+    project_size: document.getElementById('project_size').value.trim() || null,
+    project_details:
+      document.getElementById('project_details').value.trim() || null,
+    priority: document.getElementById('priority').value,
+    district: document.getElementById('district').value.trim() || null,
+    thana: document.getElementById('thana').value.trim() || null,
+    area: document.getElementById('area').value.trim() || null,
+    street_details:
+      document.getElementById('street_details').value.trim() || null,
+    campaign: document.getElementById('campaign').value.trim() || null,
+    info_source: document.getElementById('info_source').value.trim() || null,
   };
-  
-  let state = { q:'', page:1, pageSize:10, total:0 };
-  
-  function rowsHtml(list) {
-    return list.map(x => `
-      <tr data-id="${x.id}">
-        <td>${x.prospect_name||''}</td>
-        <td>${x.primary_mobile||''}</td>
-        <td>${x.primary_email||''}</td>
-        <td>${x.project_name||''}</td>
-        <td><span class="badge badge-secondary">${x.status||''}</span></td>
-        <td class="text-right"><button class="btn btn-xs btn-danger del"><i class="fas fa-trash"></i></button></td>
-      </tr>
-    `).join('');
+
+  if (!body.prospect_name || !body.primary_mobile) {
+    alert('Prospect name এবং primary mobile দরকার');
+    return;
   }
-  
-  async function load() {
-    const params = new URLSearchParams({ q: state.q, page: state.page, pageSize: state.pageSize });
-    const r = await API.req('/api/leads?' + params.toString());
-    const { data, total, page, pageSize } = await r.json();
-    state.total = total; state.page = page; state.pageSize = pageSize;
-    document.querySelector('#tbl tbody').innerHTML = rowsHtml(data);
-    const start = (page-1)*pageSize+1, end = Math.min(total, page*pageSize);
-    document.getElementById('pageInfo').textContent = total ? `Showing ${start}-${end} of ${total}` : 'No results';
-    document.getElementById('prev').disabled = (page<=1);
-    document.getElementById('next').disabled = (page*pageSize>=total);
+
+  const res = await API.request('/api/leads', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const er = (await res.json().catch(() => ({}))) || {};
+    alert(er.error || 'Failed to create lead');
+    return;
   }
-  
-  // users for assignments (Select2)
-  async function loadUsers() {
-    const r = await API.req('/api/users/options'); const { data } = await r.json();
-    const sel = $('#assigned_to'); sel.empty();
-    data.forEach(u => sel.append(new Option(u.name, u.id, false, false)));
-    sel.select2({ width:'resolve' });
+
+  $('#leadModal').modal('hide');
+  state.page = 1;
+  document.getElementById('q').value = '';
+  state.q = '';
+  loadLeads();
+  loadStats();
+});
+
+// modal open হলে user list লোড
+$('#leadModal').on('shown.bs.modal', () => {
+  loadUsers();
+});
+
+// ---------- Delete lead ---------- //
+document.querySelector('#tbl tbody').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.del');
+  if (!btn) return;
+  const tr = btn.closest('tr');
+  const id = tr.dataset.id;
+  if (!id) return;
+
+  if (!confirm('Delete this lead?')) return;
+
+  const res = await API.request('/api/leads/' + encodeURIComponent(id), {
+    method: 'DELETE',
+  });
+
+  if (res.status === 204) {
+    loadLeads();
+    loadStats();
+  } else {
+    const er = (await res.json().catch(() => ({}))) || {};
+    alert(er.error || 'Delete failed');
   }
-  
-  document.getElementById('btnSearch').addEventListener('click', ()=>{ state.q=document.getElementById('q').value.trim(); state.page=1; load(); });
-  document.getElementById('q').addEventListener('keyup', e=>{ if(e.key==='Enter'){ state.q=e.target.value.trim(); state.page=1; load(); }});
-  document.getElementById('prev').addEventListener('click', ()=>{ if(state.page>1){ state.page--; load(); }});
-  document.getElementById('next').addEventListener('click', ()=>{ if(state.page*state.pageSize<state.total){ state.page++; load(); }});
-  
-  // open modal → refresh users
-  $('#leadModal').on('shown.bs.modal', loadUsers);
-  
-  // Save lead (create + sub-sections + assignments)
-  document.getElementById('fLead').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-  
-    const base = {
-      prospect_type: document.querySelector('input[name="prospect_type"]:checked')?.value || 'Individual',
-      prospect_name: document.getElementById('prospect_name').value,
-      primary_mobile: document.getElementById('primary_mobile').value,
-      primary_email: document.getElementById('primary_email').value || null,
-      project_name: document.getElementById('project_name').value || null,
-      already_client: document.getElementById('already_client').checked,
-      priority: document.getElementById('priority').value,
-      interested_item: document.getElementById('interested_item').value || null,
-      zone: document.getElementById('zone').value || null,
-      status: document.getElementById('status').value,
-      campaign: document.getElementById('campaign').value || null,
-      contacted_by: document.getElementById('contacted_by').value || null,
-      info_source: document.getElementById('info_source').value || null,
-      important_note: document.getElementById('important_note').value || null
-    };
-  
-    const r = await API.req('/api/leads', { method:'POST', body: JSON.stringify(base) });
-    if (!r.ok) { const er = await r.json(); alert(er.error||'Failed'); return; }
-    const { data } = await r.json(); const id = data.id;
-  
-    // personal
-    const personal = {
-      dob: document.getElementById('dob').value || null,
-      gender: document.getElementById('gender').value || null,
-      nid: document.getElementById('nid').value || null,
-      address_line1: document.getElementById('address_line1').value || null,
-      address_line2: document.getElementById('address_line2').value || null,
-      city: document.getElementById('city').value || null,
-      postal_code: document.getElementById('postal_code').value || null
-    };
-    await API.req(`/api/leads/${id}/personal`, { method:'PUT', body: JSON.stringify(personal) });
-  
-    // communication
-    const comm = {
-      preferred_channel: document.getElementById('preferred_channel').value || null,
-      whatsapp: document.getElementById('whatsapp').value || null,
-      facebook: document.getElementById('facebook').value || null,
-      last_contact_at: document.getElementById('last_contact_at').value || null,
-      notes: document.getElementById('comm_notes').value || null
-    };
-    await API.req(`/api/leads/${id}/communication`, { method:'PUT', body: JSON.stringify(comm) });
-  
-    // job
-    const job = {
-      profession: document.getElementById('profession').value || null,
-      organization: document.getElementById('organization').value || null,
-      designation: document.getElementById('designation').value || null,
-      income: document.getElementById('income').value || null
-    };
-    await API.req(`/api/leads/${id}/job`, { method:'PUT', body: JSON.stringify(job) });
-  
-    // influencer
-    const infl = {
-      is_influenced: document.getElementById('is_influenced').checked,
-      influencer_name: document.getElementById('influencer_name').value || null,
-      influencer_contact: document.getElementById('influencer_contact').value || null,
-      relation: document.getElementById('relation').value || null,
-      notes: document.getElementById('infl_notes').value || null
-    };
-    await API.req(`/api/leads/${id}/influencer`, { method:'PUT', body: JSON.stringify(infl) });
-  
-    // assignments
-    const user_ids = ($('#assigned_to').val() || []).map(Number);
-    const primary_id = user_ids.length ? user_ids[0] : null;
-    await API.req(`/api/leads/${id}/assignments`, { method:'PUT', body: JSON.stringify({ user_ids, primary_id }) });
-  
-    $('#leadModal').modal('hide');
-    state.page = 1; state.q=''; document.getElementById('q').value='';
-    load();
+});
+
+// ---------- Template download ---------- //
+document.getElementById('btnTemplate').addEventListener('click', () => {
+  window.location = '/api/leads/template';
+});
+
+// ---------- Bulk upload ---------- //
+document.getElementById('fBulk').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fileInput = document.getElementById('bulkFile');
+  if (!fileInput.files.length) return;
+
+  const fd = new FormData();
+  fd.append('file', fileInput.files[0]);
+
+  const res = await fetch('/api/leads/bulk', {
+    method: 'POST',
+    body: fd,
+    credentials: 'include',
   });
-  
-  // delete
-  document.querySelector('#tbl tbody').addEventListener('click', async (e)=>{
-    const btn = e.target.closest('.del'); if(!btn) return;
-    const tr = btn.closest('tr'); const id = tr.dataset.id;
-    if(!confirm('Delete this lead?')) return;
-    const r = await API.req('/api/leads/'+id, { method:'DELETE' });
-    if (r.status===204) load();
-  });
-  
-  // Bulk template & upload
-  document.getElementById('btnTemplate').addEventListener('click', ()=>{ window.location = '/api/leads/template'; });
-  
-  document.getElementById('fBulk').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const f = document.getElementById('bulkFile');
-    if (!f.files.length) return;
-    const fd = new FormData(); fd.append('file', f.files[0]);
-    const r = await fetch('/api/leads/bulk', { method:'POST', body: fd, credentials:'include' });
-    const json = await r.json();
-    document.getElementById('bulkResult').innerHTML =
-      `<div class="alert alert-info mb-2">Inserted: ${json.inserted}</div>` +
-      (json.errors?.length ? `<div class="alert alert-warning"><b>Errors:</b><br>${json.errors.slice(0,10).join('<br>')}</div>` : '');
-    if (json.inserted) load();
-  });
-  
-  load();
-  
+
+  const json = await res.json().catch(() => ({}));
+  const resultEl = document.getElementById('bulkResult');
+
+  resultEl.innerHTML =
+    `<div class="alert alert-info mb-2">Inserted: ${
+      json.inserted || 0
+    }</div>` +
+    (json.errors && json.errors.length
+      ? `<div class="alert alert-warning"><b>Errors:</b><br>${json.errors
+          .slice(0, 10)
+          .map(escapeHtml)
+          .join('<br>')}</div>`
+      : '');
+
+  if (json.inserted) {
+    loadLeads();
+    loadStats();
+  }
+});
+
+// ---------- প্রথম লোড ---------- //
+loadLeads();
+loadStats();

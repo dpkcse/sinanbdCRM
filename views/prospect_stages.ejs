@@ -1,0 +1,133 @@
+<%- include('partials/_head') %>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+  <%- include('partials/_navbar') %>
+  <%- include('partials/_sidebar', { active: 'prospect_stages' }) %>
+
+  <div class="content-wrapper">
+    <section class="content pt-3">
+      <div class="container-fluid">
+
+        <!-- Page header -->
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1 class="m-0 text-dark">Prospect Stage Settings</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+              <li class="breadcrumb-item active">Prospect Stages</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- List card -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title mb-0">Prospect Stage List</h3>
+            <button
+              id="btnAddStage"
+              class="btn btn-primary btn-sm"
+              type="button"
+              data-toggle="modal"
+              data-target="#stageModal">
+              <i class="fas fa-plus mr-1"></i> Add Stage
+            </button>
+          </div>
+
+          <div class="card-body table-responsive p-0">
+            <table class="table table-hover text-nowrap mb-0" id="tblStages">
+              <thead>
+                <tr>
+                  <th style="width:40%">Prospect Stage</th>
+                  <th style="width:25%">Funnel Color</th>
+                  <th style="width:15%">Display Order</th>
+                  <th style="width:20%" class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="4">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <%- include('partials/_footer') %>
+</div>
+
+<!-- Add/Edit Stage Modal -->
+<div class="modal fade" id="stageModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Prospect Stage</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>×</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="fStage" autocomplete="off">
+          <input type="hidden" id="stage_id">
+
+          <div class="form-group">
+            <label>Stage Name <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              id="stage_name"
+              class="form-control"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label>Funnel Color</label>
+            <input
+              type="color"
+              id="stage_color"
+              class="form-control"
+              style="max-width: 100px;">
+            <small class="form-text text-muted">
+              Pick a color for this stage (e.g. #F3E15A).
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Display Order</label>
+            <input
+              type="number"
+              id="stage_order"
+              class="form-control"
+              value="0">
+          </div>
+
+          <div class="form-group form-check">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              id="stage_active"
+              checked>
+            <label class="form-check-label" for="stage_active">
+              Active
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            Save
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Page script -->
+<script src="/javascripts/prospect_stages.js" defer></script>
+<%- include('partials/_scripts') %>
+</body>
