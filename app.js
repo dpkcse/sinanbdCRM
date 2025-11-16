@@ -9,12 +9,21 @@ const helmet         = require('helmet');
 const cors           = require('cors');
 const rateLimit      = require('express-rate-limit');
 
-const pageAuth       = require('./middleware/pageAuth');
-const authRouter     = require('./routes/auth');
-const leadsRouter    = require('./routes/leads');
-const usersRouter    = require('./routes/users');
-const contactsRouter = require('./routes/contacts');
+
+const pageAuth             = require('./middleware/auth.js');
+const authRouter           = require('./routes/auth');
+const leadsRouter          = require('./routes/leads');
+const usersRouter          = require('./routes/users');
+const contactsRouter       = require('./routes/contacts');
 const prospectStagesRouter = require('./routes/prospectStages');
+const dashboardRouter      = require('./routes/dashboard');
+const hrEmployeesApiRouter = require('./routes/hrEmployees');
+const adminRolesRouter       = require('./routes/adminRoles');
+const adminPermissionsRouter = require('./routes/adminPermissions');
+const adminUsersRouter       = require('./routes/adminUsers');
+const verifyEmailRouter = require('./routes/verifyEmail');
+const profileRouter         = require('./routes/profile');
+
 
 const app = express();
 
@@ -30,7 +39,7 @@ app.use(
       directives: {
         "default-src": ["'self'"],
         "script-src": ["'self'"],
-        "style-src": ["'self'"],
+        "style-src": ["'self'", "https://webtoolsbd.com", "'unsafe-inline'"],
         "img-src": ["'self'", "data:"],
         "font-src": ["'self'", "data:"],
         "connect-src": ["'self'"],
@@ -85,35 +94,91 @@ app.use(
   '/javascripts',
   express.static(path.join(__dirname, 'public', 'javascripts'))
 );
+
+// Chart.js dist ফোল্ডারকে /vendor/chart.js এর নিচে serve করব
+app.use(
+  '/vendor/chart.js',
+  express.static(path.join(__dirname, 'node_modules', 'chart.js', 'dist'))
+);
+
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
-app.use(express.static(path.join(__dirname, 'public'))); // e.g. favicon
+app.use(express.static(path.join(__dirname, 'public'))); // favicon ইত্যাদি
 
-/* ---------- PAGE ROUTES (guarded with pageAuth) ---------- */
+app.use('/', verifyEmailRouter);
+app.use('/', profileRouter);
 
-// লগইন থাকলে /dashboard, নাহলে /login
+/* ===================================================================
+ * PAGE ROUTES (সবগুলো pageAuth দিয়ে প্রটেক্টেড)
+ * =================================================================== */
+
+// root → login / dashboard redirect
 app.get('/', pageAuth.baseRedirect);
+
+/* ---------- Auth pages ---------- */
 
 // Login page
 app.get('/login', pageAuth.redirectIfAuthed, (req, res) =>
   res.render('login', { title: 'Login — Interior CRM' })
 );
 
-// Dashboard
+/* ---------- Dashboard (global) ---------- */
+
 app.get('/dashboard', pageAuth.requirePageAuth, (req, res) =>
-  res.render('dashboard', { title: 'Dashboard — Interior CRM' })
+  res.render('dashboard', {
+    title: 'Dashboard — Interior CRM',
+    active: 'dashboard',
+  })
 );
 
-// Leads page
+/* ---------- CRM MODULE ---------- */
+
+// Leads list
 app.get('/leads', pageAuth.requirePageAuth, (req, res) =>
-  res.render('leads', { title: 'Leads — Interior CRM', active: 'leads' })
+  res.render('leads', {
+    title: 'Leads — Interior CRM',
+    active: 'leads',
+  })
 );
 
-// Contacts (যদি ব্যবহার করো)
+// ভবিষ্যতে যদি Contacts আলাদা ভাবে ব্যবহার করো
 app.get('/contacts', pageAuth.requirePageAuth, (req, res) =>
-  res.render('contacts', { title: 'Contacts — Interior CRM' })
+  res.render('contacts', {
+    title: 'Contacts — Interior CRM',
+    active: 'contacts',
+  })
 );
 
-// Prospect Stage settings page (sidebar থেকে /prospect-stages/manage)
+/* ---------- HRM MODULE ---------- */
+
+// Employees page
+app.get('/hr/employees', pageAuth.requirePageAuth, (req, res) =>
+  res.render('hr/employees', {
+    title: 'Employees — Interior HRM',
+    active: 'hr_employees',
+  })
+);
+
+// Attendance page
+app.get('/hr/attendance', pageAuth.requirePageAuth, (req, res) =>
+  res.render('hr/attendance', {
+    title: 'Attendance — Interior HRM',
+    active: 'hr_attendance',
+  })
+);
+
+/* ---------- ACCOUNTS MODULE ---------- */
+
+// আপাতত শুধু placeholder; পরে সাবমেনু আসবে
+app.get('/accounts', pageAuth.requirePageAuth, (req, res) =>
+  res.render('accounts', {
+    title: 'Accounts — Interior ERP',
+    active: 'accounts',
+  })
+);
+
+/* ---------- SETTINGS MODULE ---------- */
+
+// Prospect Stage settings
 app.get(
   '/prospect-stages/manage',
   pageAuth.requirePageAuth,
@@ -124,7 +189,17 @@ app.get(
     })
 );
 
-/* ---------- API ROUTES ---------- */
+// User Management page
+app.get('/users', pageAuth.requirePageAuth, (req, res) =>
+  res.render('users', {
+    title: 'User Management — Interior CRM',
+    active: 'users',
+  })
+);
+
+/* ===================================================================
+ * API ROUTES
+ * =================================================================== */
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ ok: true }));
@@ -135,11 +210,14 @@ app.use('/api/leads', leadsRouter);
 // Users API
 app.use('/api/users', usersRouter);
 
-// Prospect stages API (list / create / update / delete)
+// Prospect stages API
 app.use('/api/prospect-stages', prospectStagesRouter);
 
 // Contacts API
 app.use('/api/contacts', contactsRouter);
+
+// Dashboard সংক্রান্ত API গুলো (এই রাউট ফাইলের ভিতরে /api/... থাকবে)
+app.use('/', dashboardRouter);
 
 // Login API (rate limited)
 app.use(
@@ -152,6 +230,15 @@ app.use(
   })
 );
 app.use('/api/auth', authRouter);
+
+// HR Employees API
+app.use('/api/hr/employees', hrEmployeesApiRouter);
+
+// Role / Permission / User admin APIs
+app.use('/api/admin/roles', adminRolesRouter);
+app.use('/api/admin/permissions', adminPermissionsRouter);
+app.use('/api/admin/users', adminUsersRouter);
+
 
 /* ---------- 404 handler ---------- */
 app.use((req, res, next) => {

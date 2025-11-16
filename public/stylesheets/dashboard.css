@@ -1,0 +1,125 @@
+/* === Dashboard summary cards === */
+.dashboard-card {
+    border-radius: 12px;
+    background: #ffffff;
+    transition: box-shadow 0.2s ease, transform 0.1s ease;
+  }
+  
+  .dashboard-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+  }
+  
+  .dashboard-card .card-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+  
+  .dashboard-card .card-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+  }
+  
+  .dashboard-card .card-icon {
+    font-size: 30px;
+    opacity: 0.65;
+  }
+  
+  /* রং */
+  .dashboard-card--teal  { background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%); color:#fff; }
+  .dashboard-card--green { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); color:#fff; }
+  .dashboard-card--amber { background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); color:#fff; }
+  
+  .dashboard-card--teal  .card-label,
+  .dashboard-card--green .card-label,
+  .dashboard-card--amber .card-label {
+    color: rgba(255,255,255,0.85);
+  }
+  .dashboard-card--teal  .card-value,
+  .dashboard-card--green .card-value,
+  .dashboard-card--amber .card-value {
+    color: #fff;
+  }
+  .dashboard-card--teal  .card-icon,
+  .dashboard-card--green .card-icon,
+  .dashboard-card--amber .card-icon {
+    opacity: 0.9;
+  }
+  
+  /* === Stage funnel (Prospects by Stage) === */
+  .funnel-card {
+    background: #f5f7ff;
+    border-radius: 18px;
+    padding: 4px 0 6px;
+  }
+  
+  .pipeline {
+    position: relative;
+    padding: 18px 32px 10px 32px;
+    overflow-x: auto;
+  }
+  
+  .pipeline-inner {
+    position: relative;
+    min-width: max-content;
+  }
+  
+  /* এই লাইনটাই মাঝখানে থাকবে */
+  .pipeline-line {
+    position: absolute;
+    left: 72px;        /* প্রথম সার্কেল থেকে শুরু */
+    right: 72px;       /* শেষ সার্কেল পর্যন্ত */
+    top: 34px;         /* সার্কেলের মাঝামাঝি */
+    height: 2px;
+    background: #c4d3ff;
+    z-index: 1;
+  }
+  
+  .funnel-bar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+    min-width: max-content;
+  }
+  
+  .funnel-stage {
+    text-align: center;
+    flex: 0 0 auto;
+  }
+  
+  .funnel-count {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid #4f7cf7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0 auto 6px;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.15);
+  }
+  
+  .funnel-stage--total .funnel-count {
+    border-color: #22c55e;
+  }
+  
+  .funnel-label {
+    font-size: 11px;
+    color: #374151;
+    white-space: nowrap;
+  }
+  
+  /* === Recent table === */
+  #recentLeadsBody td {
+    vertical-align: middle;
+  }
+  
