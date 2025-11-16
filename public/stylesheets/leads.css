@@ -1,0 +1,316 @@
+/* ---- toolbar ---- */
+.top-toolbar {
+    background: #f5f7ff;
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1.5fr) auto;
+    grid-gap: 12px;
+    align-items: center;
+  }
+  .top-toolbar .btn {
+    border-radius: 24px;
+    font-weight: 600;
+    padding-inline: 20px;
+  }
+  .top-toolbar .btn-success {
+    background: #06b34b;
+    border-color: #06b34b;
+  }
+  .top-toolbar .btn-primary {
+    background: #007bff;
+    border-color: #007bff;
+  }
+  .top-toolbar .search-wrap .form-control {
+    border-radius: 24px 0 0 24px;
+  }
+  .top-toolbar .search-wrap .btn {
+    border-radius: 0 24px 24px 0;
+  }
+  .btn-adv-search {
+    border-radius: 24px;
+    font-weight: 600;
+  }
+  
+  /* ---- funnel ---- */
+  .funnel-card {
+    background: #f5f7ff;
+    border-radius: 18px;
+  }
+  
+  .pipeline {
+    position: relative;
+    padding: 20px 24px 10px 24px;
+    overflow-x: auto;
+    /* scroll থাকবে, scrollbar দেখা যাবে না */
+    scrollbar-width: none;          /* Firefox */
+  }
+  .pipeline::-webkit-scrollbar {
+    display: none;                  /* Chrome / Safari */
+  }
+  
+  .pipeline-inner {
+    position: relative;
+    min-width: max-content;
+    /* লাইন যেন প্রথম/শেষ সার্কেলের মাঝ থেকে শুরু/শেষ হয় */
+    padding: 0 45px; /* 45px = funnel-stage width (90px) / 2 */
+  }
+  
+  .pipeline-line {
+    position: absolute;
+    left: 65px;
+    right: 100px;
+    top: 24px;
+    height: 2px;
+    background: #c4d3ff;
+    z-index: 1;
+  }
+  
+  .funnel-bar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+    min-width: max-content;
+  }
+  
+  .funnel-stage {
+    text-align: center;
+    flex: 0 0 75px; /* প্রতিটি স্টেজ ব্লকের ফিক্সড প্রস্থ */
+  }
+  
+  .funnel-count {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid #4f7cf7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0 auto 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  }
+  
+  .funnel-stage--total .funnel-count {
+    border-color: #28a745;
+  }
+  
+  .funnel-label {
+    font-size: 11px;
+    color: #444;
+    white-space: nowrap;
+  }
+  
+  /* ---- table ---- */
+  .table-prospect {
+    font-size: 13px;
+  }
+  .table-prospect thead th {
+    background: #4f7cf7;
+    color: #fff;
+    border-bottom: none;
+  }
+  .table-prospect tbody tr:nth-child(even) {
+    background: #fafbff;
+  }
+  .table-prospect td,
+  .table-prospect th {
+    vertical-align: middle !important;
+  }
+  .prospect-id {
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .prospect-meta {
+    font-size: 11px;
+    color: #777;
+  }
+  .prospect-name {
+    font-weight: 600;
+  }
+  .prospect-location {
+    font-size: 11px;
+    color: #777;
+  }
+  .followup-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    padding: 2px 8px;
+    background: #e2ebff;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+  .followup-pill i {
+    margin-right: 3px;
+  }
+  
+  /* ছোট util ক্লাস */
+  .select-page-size {
+    width: auto;
+    display: inline-block;
+  }
+
+  /* ---- Prospect modal ---- */
+.modal-prospect {
+    border-radius: 18px;
+    border: 0;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+  }
+  
+  .modal-prospect .modal-header {
+    padding: 18px 24px 8px;
+    border-bottom: 0;
+  }
+  
+  .modal-prospect .modal-body {
+    padding: 8px 24px 20px;
+  }
+  
+  .modal-prospect .modal-title {
+    font-weight: 600;
+  }
+  
+  .modal-prospect .modal-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+  }
+  
+  .modal-prospect .nav-pills {
+    margin-bottom: 16px;
+  }
+  
+  .modal-prospect .nav-pills .nav-link {
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4b5563;
+  }
+  
+  .modal-prospect .nav-pills .nav-link.active {
+    background: #4f7cf7;
+    color: #fff;
+  }
+  
+  .form-section-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  
+  .form-section-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 14px;
+  }
+  
+  .modal-prospect .form-group label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* page-size control */
+.page-size-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.page-size-select {
+  padding-right: 2rem;          /* chevron এর জন্য জায়গা */
+  min-width: 80px;
+  border-radius: 999px;         /* পুরো circle-ish pill look */
+  border-color: #d0d7e2;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  background-color: #fff;
+}
+
+.page-size-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 0.15rem rgba(59, 130, 246, 0.25);
+}
+
+.page-size-chevron {
+  position: absolute;
+  right: 0.65rem;
+  pointer-events: none;
+  color: #9ca3af;
+  font-size: 0.7rem;
+}
+
+.page-size-wrapper .form-control-sm {
+  font-size: 0.8rem;
+  height: calc(1.5em + 0.5rem + 2px);
+}
+
+/* ছোট ডিভাইসে একটু গ্যাপ কমিয়ে দেই */
+@media (max-width: 575.98px) {
+  .page-size-wrapper {
+    min-width: 70px;
+  }
+}
+
+/* Follow-up timeline */
+.timeline-list {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 1rem;
+  margin-bottom: 1rem;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 0;
+  bottom: -0.25rem;
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -0.05rem;
+  top: 0.35rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.timeline-content {
+  position: relative;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.timeline-note {
+  font-size: 0.875rem;
+}
+
+.timeline-next {
+  font-size: 0.75rem;
+}
+
+  
+  

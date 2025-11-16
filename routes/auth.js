@@ -62,6 +62,13 @@ router.post('/login', async (req, res) => {
   const ok = await bcrypt.compare(password, user.password_hash);
   if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
+  // 🔴 নতুন অংশ: account inactive / email verify না হলে লগইন বন্ধ
+  if (!user.is_active) {
+    return res
+      .status(403)
+      .json({ error: 'Account is not active (email not verified).' });
+  }
+
   const accessToken  = signAccess(user);
   const refreshToken = await issueRefresh(user.id);
 

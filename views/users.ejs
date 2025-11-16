@@ -1,0 +1,221 @@
+<%- include('partials/_head', { title: 'User Management — Interior CRM' }) %>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+  <%- include('partials/_navbar') %>
+  <%- include('partials/_sidebar', { active: 'users' }) %>
+
+  <div class="content-wrapper">
+    <section class="content pt-3">
+      <div class="container-fluid">
+
+        <h1 class="h4 mb-3">User Management</h1>
+
+        <div class="card card-tabs">
+          <div class="card-header p-0 pt-1 border-bottom-0">
+            <ul class="nav nav-tabs" id="userTabs" role="tablist">
+              <li class="nav-item">
+                <a class="nav-link active" id="tab-users" data-toggle="pill"
+                   href="#tab-users-pane" role="tab">Users</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="tab-roles" data-toggle="pill"
+                   href="#tab-roles-pane" role="tab">Roles</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="tab-permissions" data-toggle="pill"
+                   href="#tab-permissions-pane" role="tab">Permissions</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card-body">
+            <div class="tab-content">
+
+              <!-- USERS TAB -->
+              <div class="tab-pane fade show active" id="tab-users-pane" role="tabpanel">
+                <div class="d-flex mb-3">
+                  <input id="userSearch" class="form-control mr-2" placeholder="Search users...">
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover table-sm">
+                    <thead>
+                      <tr>
+                        <th>Name &amp; Email</th>
+                        <th>Status</th>
+                        <th>Roles</th>
+                        <th style="width: 120px;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                      <!-- JS render -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- ROLES TAB -->
+              <div class="tab-pane fade" id="tab-roles-pane" role="tabpanel">
+                <div class="d-flex mb-3">
+                  <button class="btn btn-primary ml-auto" id="btnAddRole">
+                    <i class="fas fa-plus mr-1"></i> Add Role
+                  </button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover table-sm">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Slug</th>
+                        <th>Permissions</th>
+                        <th style="width: 120px;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="roleTableBody">
+                      <!-- JS render -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- PERMISSIONS TAB -->
+              <div class="tab-pane fade" id="tab-permissions-pane" role="tabpanel">
+                <div class="d-flex mb-3">
+                  <button class="btn btn-primary ml-auto" id="btnAddPermission">
+                    <i class="fas fa-plus mr-1"></i> Add Permission
+                  </button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover table-sm">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Slug</th>
+                        <th style="width: 120px;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="permTableBody">
+                      <!-- JS render -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Role modal -->
+<div class="modal fade" id="roleModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <form id="roleForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="roleModalTitle">Add Role</h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="roleId">
+          <div class="form-group">
+            <label>Name *</label>
+            <input type="text" class="form-control" id="roleName" required>
+          </div>
+          <div class="form-group">
+            <label>Slug *</label>
+            <input type="text" class="form-control" id="roleSlug" required>
+            <small class="text-muted">Example: admin, manager, staff</small>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-control" id="roleDescription" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Permissions</label>
+            <div id="rolePermList" class="border rounded p-2" style="max-height: 220px; overflow:auto;">
+              <!-- JS: checkbox list -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Permission modal -->
+<div class="modal fade" id="permModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="permForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="permModalTitle">Add Permission</h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="permId">
+          <div class="form-group">
+            <label>Name *</label>
+            <input type="text" class="form-control" id="permName" required>
+          </div>
+          <div class="form-group">
+            <label>Slug *</label>
+            <input type="text" class="form-control" id="permSlug" required>
+            <small class="text-muted">Example: users.manage, leads.view</small>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-control" id="permDescription" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Assign role to user modal -->
+<div class="modal fade" id="userRoleModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="userRoleForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userRoleModalTitle">Assign Roles</h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="userRoleUserId">
+          <div id="userRoleList" class="border rounded p-2" style="max-height: 260px; overflow:auto;">
+            <!-- role checkbox list -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="/vendor/jquery/dist/jquery.min.js"></script>
+<script src="/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/admin-lte/dist/js/adminlte.min.js"></script>
+<script src="/javascripts/users.js"></script>
+</body>
+</html>

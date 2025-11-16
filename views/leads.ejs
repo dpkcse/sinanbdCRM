@@ -1,144 +1,6 @@
 <%- include('partials/_head') %>
 <link rel="stylesheet" href="/vendor/select2/dist/css/select2.min.css" />
-
-<style>
-  /* ---------- Top toolbar ---------- */
-  .top-toolbar {
-    background: #f5f7ff;
-    border-radius: 16px;
-    padding: 18px 20px;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1.5fr) auto;
-    grid-gap: 12px;
-    align-items: center;
-  }
-  .top-toolbar .btn {
-    border-radius: 24px;
-    font-weight: 600;
-    padding-inline: 20px;
-  }
-  .top-toolbar .btn-success {
-    background: #06b34b;
-    border-color: #06b34b;
-  }
-  .top-toolbar .btn-primary {
-    background: #007bff;
-    border-color: #007bff;
-  }
-  .top-toolbar .search-wrap .form-control {
-    border-radius: 24px 0 0 24px;
-  }
-  .top-toolbar .search-wrap .btn {
-    border-radius: 0 24px 24px 0;
-  }
-  .btn-adv-search {
-    border-radius: 24px;
-    font-weight: 600;
-  }
-
-  /* ---------- Funnel / pipeline ---------- */
-  .funnel-card {
-    background: #f5f7ff;
-    border-radius: 18px;
-  }
-  .pipeline {
-    position: relative;
-    padding: 20px 24px 10px 24px;
-    overflow-x: auto;
-  }
-  .pipeline-inner {
-    position: relative;
-    min-width: max-content;
-  }
-  .pipeline-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 35px;
-    height: 2px;
-    background: #d0d8ff;
-    z-index: 1;
-  }
-  .funnel-bar {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: flex-start;
-    gap: 40px;
-  }
-  .funnel-stage {
-    text-align: center;
-    flex: 0 0 auto;
-  }
-  .funnel-count {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 3px solid #3c8dbc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 14px;
-    margin: 0 auto 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  }
-  .funnel-stage.total .funnel-count {
-    border-color: #28a745;
-  }
-  .funnel-label {
-    font-size: 11px;
-    color: #444;
-    white-space: nowrap;
-  }
-
-  /* ---------- Table ---------- */
-  .table-prospect {
-    font-size: 13px;
-  }
-  .table-prospect thead th {
-    background: #4f7cf7;
-    color: #fff;
-    border-bottom: none;
-  }
-  .table-prospect tbody tr:nth-child(even) {
-    background: #fafbff;
-  }
-  .table-prospect td,
-  .table-prospect th {
-    vertical-align: middle !important;
-  }
-  .prospect-id {
-    font-weight: 700;
-    font-size: 13px;
-  }
-  .prospect-meta {
-    font-size: 11px;
-    color: #777;
-  }
-  .prospect-name {
-    font-weight: 600;
-  }
-  .prospect-location {
-    font-size: 11px;
-    color: #777;
-  }
-  .followup-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 14px;
-    padding: 2px 8px;
-    background: #e2ebff;
-    margin-right: 4px;
-    margin-bottom: 4px;
-    font-size: 11px;
-  }
-  .followup-pill i {
-    margin-right: 3px;
-  }
-</style>
+<link rel="stylesheet" href="/stylesheets/leads.css" />
 
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
@@ -163,10 +25,9 @@
         <!-- Toolbar -->
         <div class="card mb-3">
           <div class="card-body top-toolbar">
-
             <div class="btn-group">
-              <button class="btn btn-success" data-toggle="modal" data-target="#leadModal">
-                <i class="fas fa-plus mr-1"></i> Add New
+              <button id="btnAddNew" type="button" class="btn btn-success" data-toggle="modal" data-target="#leadModal">
+                <i class="fas fa-plus"></i> Add New
               </button>
               <button id="btnRefresh" class="btn btn-primary">
                 <i class="fas fa-sync-alt mr-1"></i> Refresh
@@ -175,10 +36,7 @@
 
             <div class="search-wrap">
               <div class="input-group">
-                <input id="q"
-                       class="form-control"
-                       placeholder="Search all prospects"
-                       autocomplete="off" />
+                <input id="q" class="form-control" placeholder="Search all prospects" autocomplete="off">
                 <div class="input-group-append">
                   <button id="btnSearch" class="btn btn-outline-secondary">
                     <i class="fas fa-search"></i>
@@ -201,26 +59,34 @@
             <div class="pipeline-inner">
               <div class="pipeline-line"></div>
               <div id="statusPipeline" class="funnel-bar">
+                <!-- JS দিয়ে স্টেজগুলো ভরবে -->
                 <div class="text-muted">Loading status summary...</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Main table -->
+        <!-- Table -->
         <div class="card">
           <div class="card-header d-flex align-items-center justify-content-between">
-            <div>
-              Show
-              <select id="pageSize" class="custom-select custom-select-sm" style="width:auto; display:inline-block;">
-                <option value="10" selected>10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
-              entries
+            <div class="d-flex align-items-center mb-3">
+              <span class="mr-2 text-muted small">Show</span>
+            
+              <div class="page-size-wrapper">
+                <select id="pageSize" class="form-control form-control-sm page-size-select">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+                <span class="page-size-chevron">
+                  <i class="fas fa-chevron-down"></i>
+                </span>
+              </div>
+            
+              <span class="ml-2 text-muted small">entries</span>
             </div>
-
+            
             <div>
               <button id="btnTemplate" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-cloud-download-alt mr-1"></i> Template
@@ -235,19 +101,17 @@
             <table class="table table-hover text-nowrap table-prospect" id="tbl">
               <thead>
                 <tr>
-                  <th style="width:160px;">Prospect ID</th>
-                  <th style="width:260px;">Prospect Details</th>
-                  <th style="width:130px;">Primary Contact</th>
-                  <th style="width:200px;">Followup Activity</th>
-                  <th style="width:150px;">Stage</th>
-                  <th style="width:150px;">Assigns &amp; Creator</th>
-                  <th style="width:220px;">Last &amp; Next Activity</th>
-                  <th class="text-right" style="width:60px;">Action</th>
+                  <th>Prospect ID</th>
+                  <th>Prospect Details</th>
+                  <th>Primary Contact</th>
+                  <th>Followup Activity</th>
+                  <th>Stage</th>
+                  <th>Assigns &amp; Creator</th>
+                  <th>Last &amp; Next Activity</th>
+                  <th class="text-right">Action</th>
                 </tr>
               </thead>
-              <tbody>
-                <!-- JS দিয়ে ভরবে -->
-              </tbody>
+              <tbody></tbody>
             </table>
           </div>
 
@@ -267,22 +131,34 @@
   <%- include('partials/_footer') %>
 </div>
 
-<!-- Add / Edit Prospect Modal -->
+<!-- Add Prospect Modal -->
 <div class="modal fade" id="leadModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content modal-prospect">
+
       <div class="modal-header">
-        <h5 class="modal-title">Add New Prospect</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>×</span></button>
+        <div>
+          <h5 class="modal-title mb-1" id="leadModalTitle">Add New Prospect</h5>
+          <p class="modal-subtitle mb-0">
+            Fields with <span class="text-danger">*</span> are required.
+          </p>
+        </div>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
       </div>
 
       <div class="modal-body">
-        <ul class="nav nav-pills mb-3" role="tablist">
+        <ul class="nav nav-pills" role="tablist">
           <li class="nav-item">
-            <a class="nav-link active" data-toggle="pill" href="#t-initial" role="tab">Initial Info</a>
+            <a class="nav-link active" data-toggle="pill" href="#t-initial" role="tab">
+              Initial Info
+            </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" data-toggle="pill" href="#t-basic" role="tab">Basic Info</a>
+            <a class="nav-link" data-toggle="pill" href="#t-basic" role="tab">
+              Basic Info
+            </a>
           </li>
         </ul>
 
@@ -291,18 +167,27 @@
 
             <!-- Initial Info -->
             <div class="tab-pane fade show active" id="t-initial" role="tabpanel">
-              <div class="form-row">
-                <div class="form-group col-md-6">
-                  <label>Prospect Type</label><br/>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="prospect_type" id="pt_individual" value="Individual" checked>
-                    <label class="form-check-label" for="pt_individual">Individual</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="prospect_type" id="pt_organization" value="Organization">
-                    <label class="form-check-label" for="pt_organization">Organization</label>
+              <div class="form-section-title">Prospect Type</div>
+              <div class="form-section-subtitle">
+                Choose whether this is an individual or an organization.
+              </div>
+
+              <div class="form-row mb-3">
+                <div class="col-md-6">
+                  <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-primary btn-sm active">
+                      <input type="radio" name="prospect_type" value="Individual" checked> Individual
+                    </label>
+                    <label class="btn btn-outline-primary btn-sm">
+                      <input type="radio" name="prospect_type" value="Organization"> Organization
+                    </label>
                   </div>
                 </div>
+              </div>
+
+              <div class="form-section-title">Contact Details</div>
+              <div class="form-section-subtitle">
+                Basic information about the prospect and main contact.
               </div>
 
               <div class="form-row">
@@ -327,6 +212,11 @@
                 </div>
               </div>
 
+              <div class="form-section-title">Project Details</div>
+              <div class="form-section-subtitle">
+                What kind of project or service is the prospect interested in?
+              </div>
+
               <div class="form-row">
                 <div class="form-group col-md-6">
                   <label>Project Type</label>
@@ -345,19 +235,9 @@
 
               <div class="form-row">
                 <div class="form-group col-md-6">
-                  <label>Assign User</label>
-                  <select id="assign_user" class="form-control" style="width:100%"></select>
+                  <label>Prospect Stage</label>
+                  <select id="prospect_stage_id" class="form-control w-100"></select>
                 </div>
-                <div class="form-group col-md-6">
-                  <label>Additional Assign User(s)</label>
-                  <select id="additional_assign_user" class="form-control" multiple style="width:100%"></select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Basic Info -->
-            <div class="tab-pane fade" id="t-basic" role="tabpanel">
-              <div class="form-row">
                 <div class="form-group col-md-6">
                   <label>Prospect Priority</label>
                   <select id="priority" class="form-control">
@@ -366,6 +246,38 @@
                     <option value="Low">Low</option>
                   </select>
                 </div>
+              </div>
+              <div class="form-section-title mt-3">Assignments</div>
+                <div class="form-section-subtitle">
+                  Choose who will own this prospect and any additional assignees.
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group col-md-6">
+                    <label>Primary Assignee</label>
+                    <select id="assign_user_id" class="form-control">
+                      <option value="">Me (default)</option>
+                      <!-- JS দিয়ে ইউজার লিস্ট আসবে -->
+                    </select>
+                  </div>
+                  <div class="form-group col-md-6">
+                    <label>Additional Assignees</label>
+                    <select id="additional_assign_user_ids" class="form-control" multiple>
+                      <!-- JS দিয়ে ইউজার লিস্ট আসবে -->
+                    </select>
+                    <small class="form-text text-muted">
+                      Hold Ctrl/⌘ to select multiple users.
+                    </small>
+                  </div>
+                </div>
+
+            </div>
+
+            <!-- Basic Info -->
+            <div class="tab-pane fade" id="t-basic" role="tabpanel">
+              <div class="form-section-title">Location</div>
+              <div class="form-section-subtitle">
+                Where is the prospect located?
               </div>
 
               <div class="form-row">
@@ -390,6 +302,11 @@
                 </div>
               </div>
 
+              <div class="form-section-title">Campaign &amp; Source</div>
+              <div class="form-section-subtitle">
+                Track how this prospect came into your funnel.
+              </div>
+
               <div class="form-row">
                 <div class="form-group col-md-6">
                   <label>Campaign Name</label>
@@ -405,11 +322,63 @@
           </div>
 
           <div class="mt-3 d-flex justify-content-end">
-            <button class="btn btn-primary" type="submit">Save</button>
+            <button type="button" class="btn btn-outline-secondary mr-2" data-dismiss="modal">
+              Cancel
+            </button>
+            <button class="btn btn-primary" type="submit">
+              Save
+            </button>
           </div>
         </form>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- Follow up -->
+<div class="modal fade" id="followupModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <form id="fFollowup">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Follow-up</h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+
+          <input type="hidden" id="fu_lead_id">
+
+          <div class="form-group">
+            <label>Activity Type</label>
+            <select id="fu_type" class="form-control">
+              <option value="call">Call</option>
+              <option value="sms">SMS</option>
+              <option value="email">Email</option>
+              <option value="visit">Visit</option>
+              <option value="meeting">Meeting</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Note</label>
+            <textarea id="fu_note" class="form-control" rows="2"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Next Follow-up (optional)</label>
+            <input type="datetime-local" id="fu_next_at" class="form-control">
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -436,7 +405,29 @@
   </div>
 </div>
 
+<!-- Follow-up Timeline Modal -->
+<div class="modal fade" id="activityTimelineModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="activityTimelineTitle">Follow-up history</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="activityTimelineBody" class="timeline-list">
+          <!-- JS দিয়ে টাইমলাইন এখানে আসবে -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/_scripts') %>
 <script src="/vendor/select2/dist/js/select2.full.min.js"></script>
 <script src="/javascripts/leads.js" defer></script>
-<%- include('partials/_scripts') %>
 </body>

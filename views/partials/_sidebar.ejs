@@ -3,37 +3,171 @@
     <span class="brand-text font-weight-light">Interior CRM</span>
   </a>
 
-  <div class="sidebar">
-    <nav class="mt-2">
-      <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
+  <%
+    const act  = typeof active !== 'undefined' ? active : '';
 
-        <!-- উপরের মেইন মেনুগুলো -->
+    // user + permissions from middleware/auth.js (safe fallback)
+    const user =
+      typeof currentUser !== 'undefined' && currentUser
+        ? currentUser
+        : null;
+
+    let perms = [];
+    if (typeof permissions !== 'undefined' && Array.isArray(permissions)) {
+      perms = permissions;
+    }
+
+    const isAdmin = user && user.role === 'ADMIN';
+    const can = (code) => isAdmin || perms.indexOf(code) !== -1;
+
+    const crmActive      = ['leads', 'contacts'].includes(act);
+    const hrmActive      = ['hr_employees', 'hr_attendance'].includes(act);
+    const accountsActive = ['accounts'].includes(act);
+    const settingsActive = ['prospect_stages', 'users'].includes(act);
+
+    const canSeeCRM       = can('leads.view') || can('leads.manage');
+    const canSeeHRM       = can('employees.view') || can('employees.manage');
+    const canSeeUsersPage = can('users.view') || can('users.manage');
+    const canSeeStages    = can('prospect_stages.manage');
+    const canSeeSettings  = isAdmin || canSeeUsersPage || canSeeStages;
+  %>
+  <div class="sidebar d-flex flex-column">
+    <nav class="mt-2 flex-fill">
+      <ul class="nav nav-pills nav-sidebar flex-column"
+          data-widget="treeview"
+          data-accordion="false"
+          role="menu">
+
+        <!-- DASHBOARD – সবার জন্য -->
         <li class="nav-item">
           <a href="/dashboard"
-             class="nav-link <%= (typeof active !== 'undefined' && active === 'dashboard' ? 'active' : '') %>">
+             class="nav-link <%= act === 'dashboard' ? 'active' : '' %>">
             <i class="nav-icon fas fa-tachometer-alt"></i>
             <p>Dashboard</p>
           </a>
         </li>
-
+        <!-- MY PROFILE – সব ইউজারের জন্য -->
         <li class="nav-item">
-          <a href="/leads"
-             class="nav-link <%= (typeof active !== 'undefined' && active === 'leads' ? 'active' : '') %>">
-            <i class="nav-icon fas fa-user-plus"></i>
-            <p>Leads</p>
+          <a href="/profile"
+              class="nav-link <%= act === 'profile' ? 'active' : '' %>">
+            <i class="nav-icon fas fa-user"></i>
+            <p>My Profile</p>
           </a>
         </li>
 
-        <!-- নিচের দিকে আলাদা Settings সেকশন -->
-        <li class="nav-header mt-3">SETTINGS</li>
+        <!-- CRM -->
+        <% if (canSeeCRM) { %>
+          <li class="nav-header mt-3">CRM</li>
 
-        <li class="nav-item">
-          <a href="/prospect-stages/manage"
-             class="nav-link <%= (typeof active !== 'undefined' && active === 'prospect_stages' ? 'active' : '') %>">
-            <i class="nav-icon fas fa-cog"></i>
-            <p>Prospect Stage</p>
-          </a>
-        </li>
+          <li class="nav-item has-treeview <%= crmActive ? 'menu-open' : '' %>">
+            <a href="#"
+               class="nav-link <%= crmActive ? 'active' : '' %>">
+              <i class="nav-icon fas fa-briefcase"></i>
+              <p>
+                CRM
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="/leads"
+                   class="nav-link <%= act === 'leads' ? 'active' : '' %>">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Leads</p>
+                </a>
+              </li>
+              <!-- future Contacts ইচ্ছা করলে এখানে -->
+            </ul>
+          </li>
+        <% } %>
+
+        <!-- HRM -->
+        <% if (canSeeHRM) { %>
+          <li class="nav-header mt-3">HRM</li>
+
+          <li class="nav-item has-treeview <%= hrmActive ? 'menu-open' : '' %>">
+            <a href="#"
+               class="nav-link <%= hrmActive ? 'active' : '' %>">
+              <i class="nav-icon fas fa-users"></i>
+              <p>
+                HRM
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="/hr/employees"
+                   class="nav-link <%= act === 'hr_employees' ? 'active' : '' %>">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Employees</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="/hr/attendance"
+                   class="nav-link <%= act === 'hr_attendance' ? 'active' : '' %>">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Attendance</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+        <% } %>
+
+        <!-- ACCOUNTS – চাইলে শুধু admin এর জন্য রাখলাম -->
+        <% if (isAdmin) { %>
+          <li class="nav-header mt-3">ACCOUNTS</li>
+
+          <li class="nav-item">
+            <a href="/accounts"
+               class="nav-link <%= accountsActive ? 'active' : '' %>">
+              <i class="nav-icon fas fa-file-invoice-dollar"></i>
+              <p>
+                Accounts
+                <span class="text-xs text-muted">(coming soon)</span>
+              </p>
+            </a>
+          </li>
+        <% } %>
+
+        <!-- ADMINISTRATION / SETTINGS -->
+        <% if (canSeeSettings) { %>
+          <li class="nav-header mt-3">ADMINISTRATION</li>
+
+          <li class="nav-item has-treeview <%= settingsActive ? 'menu-open' : '' %>">
+            <a href="#"
+               class="nav-link <%= settingsActive ? 'active' : '' %>">
+              <i class="nav-icon fas fa-cogs"></i>
+              <p>
+                Settings
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+              <% if (isAdmin || canSeeStages) { %>
+                <li class="nav-item">
+                  <a href="/prospect-stages/manage"
+                     class="nav-link <%= act === 'prospect_stages' ? 'active' : '' %>">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Prospect Stages</p>
+                  </a>
+                </li>
+              <% } %>
+
+              <% if (isAdmin || canSeeUsersPage) { %>
+                <li class="nav-item">
+                  <a href="/users"
+                     class="nav-link <%= act === 'users' ? 'active' : '' %>">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>User &amp; Access Control</p>
+                  </a>
+                </li>
+              <% } %>
+            </ul>
+          </li>
+        <% } %>
 
       </ul>
     </nav>

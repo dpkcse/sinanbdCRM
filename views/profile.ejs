@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('partials/_head', { title: 'My Profile' }) %>
+  </head>
+  <body class="hold-transition sidebar-mini">
+    <div class="wrapper">
+
+      <%- include('partials/_navbar') %>
+      <%- include('partials/_sidebar', { active: 'profile' }) %>
+
+      <div class="content-wrapper">
+        <section class="content pt-3">
+          <div class="container-fluid">
+
+            <div class="row mb-3">
+              <div class="col-sm-12 d-flex align-items-center justify-content-between">
+                <h1 class="h3 mb-0">My Profile</h1>
+              </div>
+            </div>
+
+            <% if (error) { %>
+              <div class="alert alert-danger"><%= error %></div>
+            <% } %>
+            <% if (message) { %>
+              <div class="alert alert-success"><%= message %></div>
+            <% } %>
+
+            <div class="row">
+              <!-- LEFT: basic info -->
+              <div class="col-md-8">
+                <div class="card">
+                  <div class="card-header">
+                    <h3 class="card-title">Profile information</h3>
+                  </div>
+                  <form action="/profile" method="post">
+                    <div class="card-body">
+                      <div class="form-group">
+                        <label>Employee Code</label>
+                        <input type="text"
+                               class="form-control"
+                               value="<%= profile && profile.employee_code ? profile.employee_code : '' %>"
+                               disabled>
+                      </div>
+                      <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text"
+                               name="full_name"
+                               class="form-control"
+                               value="<%= profile && profile.full_name ? profile.full_name : (profile && profile.user_name ? profile.user_name : '') %>">
+                      </div>
+                      <div class="form-group">
+                        <label>Email (login)</label>
+                        <input type="email"
+                               class="form-control"
+                               value="<%= profile && profile.user_email ? profile.user_email : '' %>"
+                               disabled>
+                      </div>
+                      <div class="form-row">
+                        <div class="form-group col-md-6">
+                          <label>Mobile</label>
+                          <input type="text"
+                                 name="mobile"
+                                 class="form-control"
+                                 value="<%= profile && profile.mobile ? profile.mobile : '' %>">
+                        </div>
+                        <div class="form-group col-md-6">
+                          <label>Alt. Mobile</label>
+                          <input type="text"
+                                 name="alt_mobile"
+                                 class="form-control"
+                                 value="<%= profile && profile.alt_mobile ? profile.alt_mobile : '' %>">
+                        </div>
+                      </div>
+                      <div class="form-row">
+                        <div class="form-group col-md-6">
+                          <label>Designation</label>
+                          <input type="text"
+                                 name="designation"
+                                 class="form-control"
+                                 value="<%= profile && profile.designation ? profile.designation : '' %>">
+                        </div>
+                        <div class="form-group col-md-6">
+                          <label>Department</label>
+                          <input type="text"
+                                 name="department"
+                                 class="form-control"
+                                 value="<%= profile && profile.department ? profile.department : '' %>">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-footer text-right">
+                      <button type="submit" class="btn btn-primary">
+                        Save changes
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- RIGHT: avatar + password -->
+              <div class="col-md-4">
+                <!-- avatar -->
+                <div class="card mb-3">
+                  <div class="card-header">
+                    <h3 class="card-title">Profile photo</h3>
+                  </div>
+                  <div class="card-body text-center">
+                    <div class="mb-3">
+                      <% if (profile && profile.profile_photo) { %>
+                        <img src="<%= profile.profile_photo %>"
+                             alt="Avatar"
+                             class="img-circle elevation-2"
+                             style="width: 96px; height: 96px; object-fit: cover;">
+                      <% } else { %>
+                        <div class="img-circle elevation-2 d-inline-flex align-items-center justify-content-center bg-secondary text-white"
+                             style="width: 96px; height: 96px; font-size: 32px;">
+                          <%= (profile && (profile.full_name || profile.user_name))
+                                ? (profile.full_name || profile.user_name).charAt(0).toUpperCase()
+                                : 'U' %>
+                        </div>
+                      <% } %>
+                    </div>
+                    <form action="/profile/photo"
+                          method="post"
+                          enctype="multipart/form-data">
+                      <div class="form-group">
+                        <div class="custom-file text-left">
+                          <input type="file"
+                                 class="custom-file-input"
+                                 id="avatar"
+                                 name="avatar"
+                                 accept="image/*">
+                          <label class="custom-file-label" for="avatar">
+                            Choose image…
+                          </label>
+                        </div>
+                      </div>
+                      <button type="submit" class="btn btn-outline-primary btn-block">
+                        Upload photo
+                      </button>
+                      <p class="text-muted small mt-2 mb-0">
+                        JPG/PNG, max 2&nbsp;MB.
+                      </p>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- password -->
+                <div class="card">
+                  <div class="card-header">
+                    <h3 class="card-title">Change password</h3>
+                  </div>
+                  <form action="/profile/password" method="post">
+                    <div class="card-body">
+                      <div class="form-group">
+                        <label>Current password</label>
+                        <input type="password"
+                               name="current_password"
+                               class="form-control"
+                               autocomplete="current-password">
+                      </div>
+                      <div class="form-group">
+                        <label>New password</label>
+                        <input type="password"
+                               name="new_password"
+                               class="form-control"
+                               autocomplete="new-password">
+                      </div>
+                      <div class="form-group mb-0">
+                        <label>Confirm new password</label>
+                        <input type="password"
+                               name="new_password_confirm"
+                               class="form-control"
+                               autocomplete="new-password">
+                      </div>
+                    </div>
+                    <div class="card-footer text-right">
+                      <button type="submit" class="btn btn-outline-secondary">
+                        Update password
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+      </div>
+
+      <%- include('partials/_footer') %>
+    </div>
+
+    <script src="/vendor/jquery/dist/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/admin-lte/dist/js/adminlte.min.js"></script>
+    <script>
+      // custom-file-input label text
+      $(function () {
+        $('.custom-file-input').on('change', function() {
+          var fileName = $(this).val().split('\\\\').pop();
+          $(this).next('.custom-file-label').addClass('selected').html(fileName);
+        });
+      });
+    </script>
+  </body>
+</html>
